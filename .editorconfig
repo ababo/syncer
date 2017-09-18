@@ -1,0 +1,11 @@
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[Makefile]
+indent_style = tab
+indent_size = 8
+
+[*.{h,cc}]
+indent_style = space
+indent_size = 2
