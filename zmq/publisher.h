@@ -5,35 +5,36 @@
 
 #include "../common.h"
 #include "config.h"
+#include "socket.h"
 
 namespace syncer {
 namespace zmq {
 
-/** 
+/**
  * ZeroMQ publisher.
- * Binds its socket at time of construction and allows to publish arbitrary
- * data via PUB-socket.
+ * It creates and binds a PUB-socket at time of construction. Then it allows to
+ * publish notifications.
  */
 class Publisher {
  public:
   /**
    * Constructor.
-   * Binds an internal PUB-socket. 
+   * Part of the backend template API.
    */
-  Publisher(const Config& config);
-
-  /** Destructor. */
-  ~Publisher();
+  Publisher(const Config& config)
+      : skt_(ZMQ_PUB, config) { }
 
   /**
-   * Publish message.
+   * Publish a notification.
+   * Part of the backend template API.
    * @param msg a message to publish.
-   * @param more true if msg is partial and further parts are to follow.
   */
-  void Publish(const Message& msg);
+  void Publish(const Message& msg) {
+    skt_.Send(msg);
+  }
 
  private:
-
+  Socket skt_;
 };
 
 }

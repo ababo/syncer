@@ -12,7 +12,7 @@ using namespace std;
 struct Config {
   /** 
    * Default constructor.
-   * It should present for compatibility with the backend template API.
+   * Part of the backend template API.
    */
   Config() {
     sndhwm = 0;
@@ -22,10 +22,11 @@ struct Config {
 
   /** 
    * Connection string constructor.
-   * It should present for compatibility with the backend template API.
+   * Part of the backend template API.
    * @param conn_str a ZeroMQ endpoint.
    */
-  Config(string conn_str) : Config() {
+  Config(const char* conn_str)
+      : Config() {
     this->endpoint = conn_str;
   }
 

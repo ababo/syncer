@@ -3,6 +3,13 @@
 
 #include "syncer.h"
 
-TEST_CASE("client/server sanity") {
+using namespace syncer;
 
+struct Data {
+
+};
+
+TEST_CASE("client/server sanity") {
+  PatchOpHandler<Data> handler;
+  Client<Data> client("tcp://*:5000", "tcp://*:5001", handler);
 }
