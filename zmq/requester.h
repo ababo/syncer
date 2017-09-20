@@ -48,7 +48,7 @@ class Requester {
    */
   ~Requester() {
     exit_ = true;
-    req_cv_.notify_one();
+    cv_.notify_one();
     thr_.join();
   }
 
@@ -62,10 +62,10 @@ class Requester {
   */
   void Request(const Message& req, int timeout = WAIT_TIMEOUT) {
     {
-      lock_guard<mutex>guard(req_lock_);
+      lock_guard<mutex> _(mtx_);
       req_ = req, timeout_ = timeout;
     }
-    req_cv_.notify_one();
+    cv_.notify_one();
   }
 
  private:
@@ -75,8 +75,8 @@ class Requester {
     Socket skt(ZMQ_REQ, conf);
 
     for (;;) {
-      unique_lock<mutex>lock(req_lock_);
-      req_cv_.wait(lock, [this]{ return exit_ || timeout_ > 0; });
+      unique_lock<mutex> lock(mtx_);
+      cv_.wait(lock, [this] { return exit_ || timeout_ > 0; });
 
       if (exit_) {
         return;
@@ -114,8 +114,8 @@ class Requester {
   thread thr_;
   int timeout_;
   Message req_;
-  mutex req_lock_;
-  condition_variable req_cv_;
+  mutex mtx_;
+  condition_variable cv_;
 };
 
 }

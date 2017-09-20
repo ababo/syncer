@@ -38,6 +38,7 @@ class Socket {
 
   /** @brief Destructor. */
   ~Socket() {
+    zmq_close(skt_);
     zmq_ctx_destroy(ctx_);
   }
 

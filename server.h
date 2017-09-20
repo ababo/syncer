@@ -26,7 +26,6 @@ using namespace std;
  * Requirements for data type template parameter:
  *   - Must have a default constructor.
  *   - Must have `from_json` and `to_json` function overloads.
- *   - Must contain `version` integer field.
  */
 template <typename T, typename Backend = DefaultBackend> class Server {
  public:
@@ -38,7 +37,9 @@ template <typename T, typename Backend = DefaultBackend> class Server {
   Server(const typename Backend::Config& rep_conf,
          const typename Backend::Config& pub_conf)
       : rep_(rep_conf, bind(&Server::HandleRequest, ref(*this), _1))
-      , pub_(pub_conf) { }
+      , pub_(pub_conf) {
+    Update(T());
+  }
 
   /**
    * @brief Update data state.
@@ -47,27 +48,29 @@ template <typename T, typename Backend = DefaultBackend> class Server {
   void Update(const T& data) {
     json next;
     to_json(next, data);
+    next["__syncer_data_version"] = ++ver_;
 
     auto diff = json::diff(state_, next);
     if (!diff.empty()) {
       state_ = next;
       pub_.Publish(diff.dump());
-      lock_guard<mutex>guard(lock_);
+      lock_guard<mutex> _(mtx_);
       reply_ = next.dump();
     }
   }
 
  private:
-  vector<char> HandleRequest(const Message&) {
-    lock_guard<mutex>guard(lock_);
+  Message HandleRequest(const Message&) {
+    lock_guard<mutex> _(mtx_);
     return reply_;
   }
 
   typename Backend::Replier rep_;
   typename Backend::Publisher pub_;
   json state_;
+  int ver_ = 0;
   Message reply_;
-  mutex lock_;
+  mutex mtx_;
 };
 
 }

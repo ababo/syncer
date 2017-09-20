@@ -23,11 +23,11 @@ namespace zmq {
  */
 class Backend {
  public:
-  using Config = Config;
-  using Publisher = Publisher;
-  using Replier = Replier;
-  using Requester = Requester;
-  using Subscriber = Subscriber;
+  using Config = zmq::Config;
+  using Publisher = zmq::Publisher;
+  using Replier = zmq::Replier;
+  using Requester = zmq::Requester;
+  using Subscriber = zmq::Subscriber;
 };
 
 }

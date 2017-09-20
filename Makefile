@@ -4,6 +4,7 @@ LD_FLAGS := -lzmq
 BUILD_DIR := ./build
 DOC_DIR := ./doc
 
+TEST_SRCS := test/main.cc test/sanity.cc
 TESTS_BINARY := ./build/syncer_test
 
 all: tests
@@ -12,7 +13,7 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 tests: $(BUILD_DIR)
-	$(CXX) $(CXX_FLAGS) test/main.cc $(LD_FLAGS) -o $(TESTS_BINARY)
+	$(CXX) $(CXX_FLAGS) $(TEST_SRCS) $(LD_FLAGS) -o $(TESTS_BINARY)
 
 test: tests
 	$(TESTS_BINARY)

@@ -62,7 +62,7 @@ template <typename T> class PatchOpRouter {
         from_json(value, typed);
         cb(data, match, op, typed);
     };
-    conds_.push_back(Case(regex(path_re), ops, h));
+    conds_.push_back(Condition(regex(path_re), ops, h));
   }
 
   /**

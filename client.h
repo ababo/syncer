@@ -38,7 +38,6 @@ using namespace std::placeholders;
  * Requirements for data type template parameter:
  *   - Must have a default constructor.
  *   - Must have `from_json` and `to_json` function overloads.
- *   - Must contain `version` integer field.
  */
 template <typename T, typename Backend = DefaultBackend> class Client {
  public:
@@ -64,8 +63,8 @@ template <typename T, typename Backend = DefaultBackend> class Client {
    * @brief Thread-safe data accessor.
    * @param func a function to access data.
    */
-  void WithData(function<void(const T& data)> func) const {
-    lock_guard<mutex>guard(lock_);
+  void Do(function<void(const T& data)> func) const {
+    lock_guard<mutex> _(const_cast<mutex&>(mtx_));
     func(data_);
   }
 
@@ -73,8 +72,8 @@ template <typename T, typename Backend = DefaultBackend> class Client {
    * @brief Thread-safe data accessor with value returned.
    * @param func a function to access data.
    */
-  template <typename T2> T2 WithData(function<T(const T& data)> func) const {
-    lock_guard<mutex>guard(lock_);
+  template <typename T2> T2 With(function<T(const T& data)> func) const {
+    lock_guard<mutex> _(const_cast<mutex&>(mtx_));
     return func(data_);
   }
 
@@ -91,9 +90,10 @@ template <typename T, typename Backend = DefaultBackend> class Client {
 
     T data;
     auto after = json::parse(msg);
+    ver_ = after["__syncer_data_version"];
     from_json(after, data);
 
-    lock_guard<mutex>guard(lock_);
+    lock_guard<mutex> _(mtx_);
     json before;
     to_json(before, data_);
     HandleDiff(json::diff(before, after));
@@ -103,17 +103,18 @@ template <typename T, typename Backend = DefaultBackend> class Client {
   void HandleNotification(const Message& msg) {
     auto diff = json::parse(msg);
 
-    lock_guard<mutex>guard(lock_);
+    lock_guard<mutex> _(mtx_);
     for (auto it = diff.begin(); it != diff.end(); ++it) {
-      if ((*it)["path"] == "/version") {
+      if ((*it)["path"] == "/__syncer_data_version") {
 
-        if ((*it)["value"] == data_.version + 1) {
+        if ((*it)["value"] == ver_ + 1) {
           HandleDiff(diff);
 
           json before;
           to_json(before, data_);
           json after = before.patch(diff);
           from_json(after, data_);
+          ver_++;
 
         } else {
           req_.Request(Message());
@@ -147,7 +148,8 @@ template <typename T, typename Backend = DefaultBackend> class Client {
   typename Backend::Subscriber sub_;
   PatchOpRouter<T> router_;
   T data_;
-  mutex lock_;
+  int ver_ = 0;
+  mutex mtx_;
 };
 
 }
