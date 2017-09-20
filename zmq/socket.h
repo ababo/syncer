@@ -1,4 +1,8 @@
-/** ZeroMQ socket wrapper. */
+/**
+ * @file socket.h
+ * @author Simon Prykhodko
+ * @brief ZeroMQ socket wrapper.
+ */
 
 #ifndef SYNCER_ZMQ_SOCKET_H_
 #define SYNCER_ZMQ_SOCKET_H_
@@ -11,19 +15,19 @@ namespace syncer {
 namespace zmq {
 
 /**
- * ZeroMQ socket.
- * Depending on type binds or connects at time of construction.
+ * @brief ZeroMQ socket.
+ * @details Depending on type binds or connects at time of construction.
  */
 class Socket {
  public:
-  /** Maximal size of transmitted message. */
+  /** @brief Maximal size of transmitted message. */
   static const int MAX_MSG_SIZE = 1024 * 1024;
 
-  /** Default waiting timeout in milliseconds. */
+  /** @brief Default waiting timeout in milliseconds. */
   static const int WAIT_TIMEOUT = 100;
 
   /**
-   * Constructor.
+   * @brief Constructor.
    * @param type ZeroMQ socket type.
    * @param conf socket configuration.
    */
@@ -32,22 +36,22 @@ class Socket {
     skt_ = CreateSocket(ctx_, type, conf);
   }
 
-  /** Destructor. */
+  /** @brief Destructor. */
   ~Socket() {
     zmq_ctx_destroy(ctx_);
   }
 
-  /** Raw ZeroMQ context. */
+  /** @brief Raw ZeroMQ context. */
   void* context() const { return ctx_; }
 
-  /** Raw ZeroMQ socket. */
+  /** @brief Raw ZeroMQ socket. */
   void* socket() const { return skt_; }
 
   /**
-   * Send message.
+   * @brief Send message.
    * @param msg a message to send.
    * @param flags ZeroMQ sending flags.
-   * @return true if succeeded.
+   * @return `true` if succeeded.
    */
   bool Send(const Message& msg, int flags = 0) {
     if (zmq_send(skt_, msg.c_str(), msg.size(), flags) == -1) {
@@ -58,10 +62,10 @@ class Socket {
   }
 
   /**
-   * Receive message.
+   * @brief Receive message.
    * @param msg[out] a message to receive.
    * @param flags ZeroMQ receiving flags.
-   * @return true if succeeded.
+   * @return `true` if succeeded.
    */
   bool Receive(Message& msg, int flags = 0) {
     msg.resize(MAX_MSG_SIZE);
@@ -77,9 +81,9 @@ class Socket {
   }
 
   /**
-   * Wait for a message to arrive.
+   * @brief Wait for a message to arrive.
    * @param timeout a timeout in milliseconds (-1 to wait forever).
-   * @return true if a message has arrived.
+   * @return `true` if a message has arrived.
    */
   bool WaitToReceive(int timeout = WAIT_TIMEOUT) {
     zmq_pollitem_t item;

@@ -1,4 +1,8 @@
-/** Set of communication primitives based on ZeroMQ. */
+/**
+ * @file zmq/backend.h
+ * @author Simon Prykhodko
+ * @brief Set of communication primitives based on ZeroMQ.
+ */
 
 #ifndef SYNCER_ZMQ_BACKEND_H_
 #define SYNCER_ZMQ_BACKEND_H_
@@ -10,11 +14,12 @@
 #include "subscriber.h"
 
 namespace syncer {
+/** @brief ZeroMQ backend stuff. */
 namespace zmq {
 
 /** 
- * ZeroMQ backend.
- * This class references types of communication primitives based on ZeroMQ.
+ * @brief ZeroMQ backend.
+ * @details It references set of communication primitives based on ZeroMQ.
  */
 class Backend {
  public:

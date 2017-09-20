@@ -1,4 +1,8 @@
-/** ZeroMQ socket configuration. */
+/**
+ * @file config.h
+ * @author Simon Prykhodko
+ * @brief ZeroMQ socket configuration.
+ */
 
 #ifndef SYNCER_ZMQ_CONFIG_H_
 #define SYNCER_ZMQ_CONFIG_H_
@@ -8,11 +12,11 @@ namespace zmq {
 
 using namespace std;
 
-/** ZeroMQ socket configuration. */
+/** @brief ZeroMQ socket configuration. */
 struct Config {
   /** 
-   * Default constructor.
-   * Part of the backend template API.
+   * @brief Default constructor.
+   * @details Part of the backend template API.
    */
   Config() {
     sndhwm = 0;
@@ -21,8 +25,8 @@ struct Config {
   }
 
   /** 
-   * Connection string constructor.
-   * Part of the backend template API.
+   * @brief Connection string constructor.
+   * @details Part of the backend template API.
    * @param conn_str a ZeroMQ endpoint.
    */
   Config(const char* conn_str)
@@ -30,16 +34,16 @@ struct Config {
     this->endpoint = conn_str;
   }
 
-  /** ZeroMQ endpoint. */
+  /** @brief ZeroMQ endpoint. */
   string endpoint;
 
-  /** ZeroMQ ZMQ_SNDHWM value. */
+  /** @brief ZeroMQ ZMQ_SNDHWM value. */
   int sndhwm;
 
-  /** ZeroMQ ZMQ_RCVHWM value. */
+  /** @brief ZeroMQ ZMQ_RCVHWM value. */
   int rcvhwm;
 
-  /** Size of ZeroMQ thread pool. */
+  /** @brief Size of ZeroMQ thread pool. */
   int io_threads;
 };
 

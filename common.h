@@ -1,4 +1,8 @@
-/** Common declarations (also used by backends). */
+/**
+ * @file common.h
+ * @author Simon Prykhodko
+ * @brief Common declarations (also used by backends).
+ */
 
 #ifndef SYNCER_COMMON_H_
 #define SYNCER_COMMON_H_
@@ -14,8 +18,8 @@
 #include <iostream>
 
 /**
- * Log a string part and further parts are to follow.
- * To customize logging this macro should be redefined by user.
+ * @brief Log a string part and further parts are to follow.
+ * @details To customize logging this macro should be redefined by user.
  */
 #define SYNCER_LOG(msg) { cerr << "syncer: " << endl; }
 
@@ -27,11 +31,12 @@
 #define SYNCER_LOG_FMTE(fmt, ...) \
 { SYNCER_LOG(string_format(fmt, ##__VA_ARGS__) + ": " + strerror(errno)); }
 
+/** @brief Syncer stuff. */
 namespace syncer {
 
 using namespace std;
 
-/** Format standard strings as sprintf() does. */
+/** @brief Format standard strings as sprintf() does. */
 template<typename ... Args>
 string string_format(const string& format, Args ... args)
 {
@@ -41,16 +46,16 @@ string string_format(const string& format, Args ... args)
     return string(buf.get(), buf.get() + size - 1);
 }
 
-/** Buffer for textual or binary messages. */
+/** @brief Buffer for textual or binary messages. */
 using Message = string;
 
-/** Callback to handle notifications by Subscriber. */
+/** @brief Callback to handle notifications by Subscriber. */
 using NotificationCallback = function<void(const Message&)>;
 
-/** Callback to handle requests by Replier. */
+/** @brief Callback to handle requests by Replier. */
 using RequestCallback = function<Message(const Message&)>;
 
-/** Callback to handle replies by Requester. */
+/** @brief Callback to handle replies by Requester. */
 using ReplyCallback = function<void(bool, const Message&)>;
 
 }

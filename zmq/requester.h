@@ -1,4 +1,8 @@
-/** ZeroMQ requester implementation. */
+/**
+ * @file requester.h
+ * @author Simon Prykhodko
+ * @brief ZeroMQ requester implementation.
+ */
 
 #ifndef SYNCER_ZMQ_REQUESTER_H_
 #define SYNCER_ZMQ_REQUESTER_H_
@@ -18,16 +22,19 @@ namespace zmq {
 using namespace std;
 
 /**
- * ZeroMQ requester.
- * It creates and connects a REQ-socket at time of construction. Then it allows
- * to send requests, handling the corresponding replies via provided callback.
- * The callback will be called sequentially in a dedicated thread.
+ * @brief ZeroMQ requester.
+ * @details It creates and connects a REQ-socket at time of construction. Then
+ * it allows to send requests, handling the corresponding replies via provided
+ * callback. The callback will be called sequentially in a dedicated thread.
  */
 class Requester {
  public:
+  /** @brief Default request waiting timeout in milliseconds. */
+  static const int WAIT_TIMEOUT = 1000;
+
   /**
-   * Constructor.
-   * Part of the backend template API.
+   * @brief Constructor.
+   * @details Part of the backend template API.
    * @param conf a socket configuration.
    * @param cb a callback for reply processing.
    */
@@ -36,8 +43,8 @@ class Requester {
       , thr_(&Requester::Process, this, conf, cb) { }
 
   /**
-   * Destructor.
-   * Part of the backend template API.
+   * @brief Destructor.
+   * @details Part of the backend template API.
    */
   ~Requester() {
     exit_ = true;
@@ -46,14 +53,14 @@ class Requester {
   }
 
   /**
-   * Send a request to handle reply via provided callback.
-   * If the connected replier doesn't respond before expiring the specified
-   * timeout or some another error occurs, the provided callback is triggered
-   * to indicate failure. Part of the backend template API.
+   * @brief Send a request to handle reply via provided callback.
+   * @details If the connected replier doesn't respond before expiring the
+   * specified timeout or some another error occurs, the provided callback is
+   * triggered to indicate failure. Part of the backend template API.
    * @param req a request message.
    * @param timeout a timeout in milliseconds.
   */
-  void Request(const Message& req, int timeout = Socket::WAIT_TIMEOUT) {
+  void Request(const Message& req, int timeout = WAIT_TIMEOUT) {
     {
       lock_guard<mutex>guard(req_lock_);
       req_ = req, timeout_ = timeout;

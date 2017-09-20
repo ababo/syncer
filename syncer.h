@@ -1,4 +1,8 @@
-/** Main syncer header to be included by users. */
+/**
+ * @file syncer.h
+ * @author Simon Prykhodko
+ * @brief Main syncer header to be included by users.
+ */
 
 #ifndef SYNCER_SYNCER_H_
 #define SYNCER_SYNCER_H_

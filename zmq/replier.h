@@ -1,4 +1,8 @@
-/** ZeroMQ replier implementation. */
+/**
+ * @file replier.h
+ * @author Simon Prykhodko
+ * @brief ZeroMQ replier implementation.
+ */
 
 #ifndef SYNCER_ZMQ_REPLIER_H_
 #define SYNCER_ZMQ_REPLIER_H_
@@ -14,16 +18,17 @@ namespace syncer {
 namespace zmq {
 
 /**
- * ZeroMQ replier.
- * It creates and binds a REP-socket at time of construction. Then it allows to
- * process incoming requests via provided callback, sending the corresponding
- * replies. The callback will be called sequentially in a dedicated thread.
+ * @brief ZeroMQ replier.
+ * @details It creates and binds a REP-socket at time of construction. Then it
+ * allows to process incoming requests via provided callback, sending the
+ * corresponding replies. The callback will be called sequentially in a
+ * dedicated thread.
  */
 class Replier {
  public:
   /**
-   * Constructor.
-   * Part of the backend template API.
+   * @briefConstructor.
+   * @details Part of the backend template API.
    * @param conf a socket configuration.
    * @param cb a callback for request processing.
    */
@@ -32,8 +37,8 @@ class Replier {
       , thr_(&Replier::Process, this, conf, cb) { }
 
   /**
-   * Destructor.
-   * Part of the backend template API.
+   * @brief Destructor.
+   * @details Part of the backend template API.
    */
   ~Replier() {
     exit_ = true;
