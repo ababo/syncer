@@ -76,7 +76,7 @@ class Socket {
       msg.resize(num);
       return true;
     } else {
-      SYNCER_LOG_FMTE("Failed to receive from ZMQ socket");
+      SYNCER_LOG_FMTE("failed to receive from ZMQ socket");
       return false;
     }
   }
@@ -93,7 +93,7 @@ class Socket {
 
     auto num = zmq_poll(&item, 1, timeout);
     if (num == -1) {
-      SYNCER_LOG_FMTE("Failed to poll ZMQ socket");
+      SYNCER_LOG_FMTE("failed to poll ZMQ socket");
       return false;
     }
 

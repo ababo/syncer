@@ -9,9 +9,9 @@ namespace syncer {
 namespace test {
 
 TEST_CASE("sanity") {
-  Server<Data> server("tcp://*:5000", "tcp://*:5001");
-
   Data data;
+  Server<Data> server("tcp://*:5000", "tcp://*:5001", data);
+
   data.ints = { 1, 2, 3 };
   data.items["key"] = { 123, "hello" };
   data.baz = 321;

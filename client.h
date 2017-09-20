@@ -7,9 +7,7 @@
 #ifndef SYNCER_CLIENT_H_
 #define SYNCER_CLIENT_H_
 
-#include <chrono>
 #include <mutex>
-#include <thread>
 
 #include "backend.h"
 #include "json.hpp"
@@ -41,9 +39,6 @@ using namespace std::placeholders;
  */
 template <typename T, typename Backend = DefaultBackend> class Client {
  public:
-  /** @brief Time period in milliseconds to retry after failure. */
-  static const int RETRY_PERIOD = 5000;
-
   /**
    * @brief Constructor.
    * @param req_conf a requester configuration.
@@ -80,11 +75,7 @@ template <typename T, typename Backend = DefaultBackend> class Client {
  private:
   void HandleReply(bool success, const Message& msg) {
     if (!success) {
-      int period = RETRY_PERIOD;
-      thread([this, period]() {
-        this_thread::sleep_for(milliseconds(period));
-        req_.Request(Message());
-      }).detach();
+      SYNCER_LOG_FMT("failed to receive server's reply");
       return;
     }
 
@@ -101,6 +92,11 @@ template <typename T, typename Backend = DefaultBackend> class Client {
   }
 
   void HandleNotification(const Message& msg) {
+    if (msg.empty()) {
+      req_.Request(Message());
+      return;
+    }
+
     auto diff = json::parse(msg);
 
     lock_guard<mutex> _(mtx_);

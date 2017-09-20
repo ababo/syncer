@@ -33,12 +33,17 @@ template <typename T, typename Backend = DefaultBackend> class Server {
    * @brief Constructor.
    * @param rep_conf a replier configuration.
    * @param pub_conf a publisher configuration.
+   * @param data an initial data state.
    */
   Server(const typename Backend::Config& rep_conf,
-         const typename Backend::Config& pub_conf)
+         const typename Backend::Config& pub_conf,
+         const T& data)
       : rep_(rep_conf, bind(&Server::HandleRequest, ref(*this), _1))
       , pub_(pub_conf) {
-    Update(T());
+    to_json(state_, data);
+    pub_.Publish(Message()); // empty message means to request a full state
+    lock_guard<mutex> _(mtx_);
+    reply_ = state_.dump();
   }
 
   /**
