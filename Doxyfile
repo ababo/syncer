@@ -2,4 +2,5 @@ GENERATE_LATEX = NO
 EXCLUDE = ./test
 EXCLUDE = ./third_party
 HTML_OUTPUT = ./doc
+PROJECT_NAME = Syncer
 RECURSIVE = YES

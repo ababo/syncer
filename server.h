@@ -26,6 +26,7 @@ using namespace std;
  * Requirements for data type template parameter:
  *   - Must have a default constructor.
  *   - Must have `from_json` and `to_json` function overloads.
+ *   - Might have a move constructor (can boost performance).
  */
 template <typename T, typename Backend = DefaultBackend> class Server {
  public:
@@ -41,9 +42,15 @@ template <typename T, typename Backend = DefaultBackend> class Server {
       : rep_(rep_conf, bind(&Server::HandleRequest, ref(*this), _1))
       , pub_(pub_conf) {
     to_json(state_, data);
-    pub_.Publish(Message()); // empty message means to request a full state
-    lock_guard<mutex> _(mtx_);
-    reply_ = state_.dump();
+    state_[VERSION_KEY] = ver_;
+
+    {
+      lock_guard<mutex> _(mtx_);
+      reply_ = state_.dump();
+    }
+
+    // empty message means to request a full state
+    pub_.Publish(Message());
   }
 
   /**
@@ -53,18 +60,25 @@ template <typename T, typename Backend = DefaultBackend> class Server {
   void Update(const T& data) {
     json next;
     to_json(next, data);
-    next["__syncer_data_version"] = ++ver_;
+    next[VERSION_KEY] = ver_ + 1;
 
     auto diff = json::diff(state_, next);
-    if (!diff.empty()) {
+    if (diff.size() > 1) {
       state_ = next;
+      ver_++;
+
+      {
+        lock_guard<mutex> _(mtx_);
+        reply_ = state_.dump();
+      }
+
       pub_.Publish(diff.dump());
-      lock_guard<mutex> _(mtx_);
-      reply_ = next.dump();
     }
   }
 
  private:
+  static constexpr char const * VERSION_KEY = "__syncer_data_version";
+
   Message HandleRequest(const Message&) {
     lock_guard<mutex> _(mtx_);
     return reply_;

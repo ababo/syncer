@@ -2,6 +2,7 @@
 #define SYNCER_TEST_DATA_H_
 
 #include <map>
+#include <string>
 #include <vector>
 
 #include "json.hpp"

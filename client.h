@@ -36,6 +36,7 @@ using namespace std::placeholders;
  * Requirements for data type template parameter:
  *   - Must have a default constructor.
  *   - Must have `from_json` and `to_json` function overloads.
+ *   - Might have a move constructor (can boost performance).
  */
 template <typename T, typename Backend = DefaultBackend> class Client {
  public:
@@ -51,44 +52,43 @@ template <typename T, typename Backend = DefaultBackend> class Client {
       : req_(req_conf, bind(&Client::HandleReply, ref(*this), _1, _2))
       , sub_(sub_conf, bind(&Client::HandleNotification, ref(*this), _1))
       , router_(router) {
+    T data;
+    to_json(state_, data);
+    state_[VERSION_KEY] = 0;
+
     req_.Request(Message());
   }
 
   /**
-   * @brief Thread-safe data accessor.
-   * @param func a function to access data.
+   * @brief Data accessor.
+   * @return a current data state.
    */
-  void Do(function<void(const T& data)> func) const {
-    lock_guard<mutex> _(const_cast<mutex&>(mtx_));
-    func(data_);
-  }
-
-  /**
-   * @brief Thread-safe data accessor with value returned.
-   * @param func a function to access data.
-   */
-  template <typename T2> T2 With(function<T(const T& data)> func) const {
-    lock_guard<mutex> _(const_cast<mutex&>(mtx_));
-    return func(data_);
+  T data() const {
+    T data;
+    {
+      lock_guard<mutex> _(const_cast<mutex&>(mtx_));
+      from_json(state_, data);
+    }
+    return move(data);
   }
 
  private:
+  static constexpr char const * VERSION_PATH = "/__syncer_data_version";
+  static constexpr char const * VERSION_KEY = &VERSION_PATH[1];
+
   void HandleReply(bool success, const Message& msg) {
     if (!success) {
       SYNCER_LOG_FMT("failed to receive server's reply");
       return;
     }
 
-    T data;
-    auto after = json::parse(msg);
-    ver_ = after["__syncer_data_version"];
-    from_json(after, data);
+    json after = json::parse(msg);
 
-    lock_guard<mutex> _(mtx_);
-    json before;
-    to_json(before, data_);
-    HandleDiff(json::diff(before, after));
-    data_ = data;
+    {
+      lock_guard<mutex> _(mtx_);
+      HandleDiff(json::diff(state_, after));
+      state_ = after;
+    }
   }
 
   void HandleNotification(const Message& msg) {
@@ -99,19 +99,14 @@ template <typename T, typename Backend = DefaultBackend> class Client {
 
     auto diff = json::parse(msg);
 
-    lock_guard<mutex> _(mtx_);
     for (auto it = diff.begin(); it != diff.end(); ++it) {
-      if ((*it)["path"] == "/__syncer_data_version") {
+      if ((*it)["path"] == VERSION_PATH) {
+        lock_guard<mutex> _(mtx_);
 
-        if ((*it)["value"] == ver_ + 1) {
+        int ver = state_[VERSION_KEY];
+        if ((*it)["value"] == ver + 1) {
           HandleDiff(diff);
-
-          json before;
-          to_json(before, data_);
-          json after = before.patch(diff);
-          from_json(after, data_);
-          ver_++;
-
+          state_ = state_.patch(diff);
         } else {
           req_.Request(Message());
         }
@@ -122,6 +117,9 @@ template <typename T, typename Backend = DefaultBackend> class Client {
   }
 
   void HandleDiff(const json& diff) {
+    T data;
+    from_json(state_, data);
+
     for (auto it = diff.begin(); it != diff.end(); ++it) {
       PatchOp op;
       string ops = (*it)["op"];
@@ -135,16 +133,18 @@ template <typename T, typename Backend = DefaultBackend> class Client {
         continue;
       }
 
-      json val((*it)["value"]);
-      router_.HandleOp(data_, (*it)["path"], op, val);
+      json val;
+      if (op != PATCH_OP_REMOVE) {
+        val = ((*it)["value"]);
+      }
+      router_.HandleOp(data, (*it)["path"], op, val);
     }
   }
 
   typename Backend::Requester req_;
   typename Backend::Subscriber sub_;
   PatchOpRouter<T> router_;
-  T data_;
-  int ver_ = 0;
+  json state_;
   mutex mtx_;
 };
 
