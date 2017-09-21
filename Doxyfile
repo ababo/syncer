@@ -1,6 +1,8 @@
-GENERATE_LATEX = NO
-EXCLUDE = ./test
-EXCLUDE = ./third_party
-HTML_OUTPUT = ./doc
 PROJECT_NAME = Syncer
+
+GENERATE_LATEX = NO
+HTML_OUTPUT = ./doc
+
 RECURSIVE = YES
+EXCLUDE = ./test
+EXCLUDE += ./third_party

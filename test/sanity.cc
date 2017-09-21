@@ -1,3 +1,4 @@
+#include <chrono>
 #include <regex>
 #include <thread>
 
@@ -7,6 +8,8 @@
 
 namespace syncer {
 namespace test {
+
+using namespace std::chrono;
 
 TEST_CASE("sanity") {
   Data data;

@@ -1,51 +1,50 @@
 /**
  * @file requester.h
  * @author Simon Prykhodko
- * @brief ZeroMQ requester implementation.
+ * @brief Generic requester implementation.
  */
 
-#ifndef SYNCER_ZMQ_REQUESTER_H_
-#define SYNCER_ZMQ_REQUESTER_H_
+#ifndef SYNCER_REQUESTER_H_
+#define SYNCER_REQUESTER_H_
 
 #include <algorithm>
 #include <atomic>
 #include <condition_variable>
+#include <functional>
 #include <thread>
 
-#include "../common.h"
-#include "config.h"
+#include "common.h"
 #include "socket.h"
 
 namespace syncer {
-namespace zmq {
 
 using namespace std;
 
 /**
- * @brief ZeroMQ requester.
- * @details It creates and connects a REQ-socket at time of construction. Then
- * it allows to send requests, handling the corresponding replies via provided
- * callback. The callback will be called sequentially in a dedicated thread.
+ * @brief Generic requester.
+ * @details It creates and connects a REQUESTER-socket at time of construction.
+ * Then it allows to send requests, handling the corresponding replies via
+ * provided callback. The callback will be called sequentially in a dedicated
+ * thread.
  */
-class Requester {
+template <typename Socket = DefaultSocket> class Requester {
  public:
+  /** @brief Callback to handle replies. */
+  using Callback = function<void(bool, const Message&)>;
+
   /** @brief Default request waiting timeout in milliseconds. */
   static const int WAIT_TIMEOUT = 1000;
 
   /**
    * @brief Constructor.
-   * @details Part of the backend template API.
-   * @param conf a socket configuration.
+   * @param params socket parameters.
    * @param cb a callback for reply processing.
    */
-  Requester(const Config& conf, ReplyCallback cb)
+  Requester(const typename Socket::Params& params, Callback cb)
       : exit_(false)
-      , thr_(&Requester::Process, this, conf, cb) { }
+      , thr_(&Requester::Process, this, params, cb) { }
 
-  /**
-   * @brief Destructor.
-   * @details Part of the backend template API.
-   */
+  /** @brief Destructor. */
   ~Requester() {
     exit_ = true;
     cv_.notify_one();
@@ -56,8 +55,7 @@ class Requester {
    * @brief Send a request to handle reply via provided callback.
    * @details If the connected replier doesn't respond before expiring the
    * specified timeout or some another error occurs, the provided callback is
-   * triggered to indicate failure. Part of the backend template API.
-   * @param req a request message.
+   * triggered to indicate failure.
    * @param timeout a timeout in milliseconds.
   */
   void Request(const Message& req, int timeout = WAIT_TIMEOUT) {
@@ -69,10 +67,10 @@ class Requester {
   }
 
  private:
-  void Process(const Config& conf, ReplyCallback cb) {
+  void Process(const typename Socket::Params& params, Callback cb) {
     Message msg;
-    msg.reserve(Socket::MAX_MSG_SIZE);
-    Socket skt(ZMQ_REQ, conf);
+    msg.reserve(MAX_MSG_SIZE);
+    Socket skt(SocketType::REQUESTER, params);
 
     for (;;) {
       unique_lock<mutex> lock(mtx_);
@@ -86,7 +84,7 @@ class Requester {
 
       bool success = false;
       for (int waited = 0; !exit_ && waited < timeout_; ) {
-        int tmp = Socket::WAIT_TIMEOUT; // to avoid linker error
+        int tmp = SOCKET_WAIT_TIMEOUT; // to avoid linker error
         int timeout = min(tmp, timeout_ - waited);
 
         if (skt.WaitToReceive(timeout)) {
@@ -119,6 +117,5 @@ class Requester {
 };
 
 }
-}
 
-#endif // SYNCER_ZMQ_REQUESTER_H_
+#endif // SYNCER_REQUESTER_H_

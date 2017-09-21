@@ -1,4 +1,4 @@
-CXX_FLAGS := -std=c++11 -I. -Ithird_party -O3
+CXX_FLAGS := -std=c++11 -Iinclude -Ithird_party -O3
 LD_FLAGS := -lzmq
 
 BUILD_DIR := ./build

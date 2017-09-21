@@ -9,14 +9,15 @@
 
 #include <mutex>
 
-#include "backend.h"
+#include "socket.h"
 #include "json.hpp"
 #include "patch_op_router.h"
+#include "requester.h"
+#include "subscriber.h"
 
 namespace syncer {
 
 using namespace std;
-using namespace chrono;
 using namespace std::placeholders;
 
 /**
@@ -38,19 +39,19 @@ using namespace std::placeholders;
  *   - Must have `from_json` and `to_json` function overloads.
  *   - Might have a move constructor (can boost performance).
  */
-template <typename T, typename Backend = DefaultBackend> class Client {
+template <typename T, typename Socket = DefaultSocket> class Client {
  public:
   /**
    * @brief Constructor.
-   * @param req_conf a requester configuration.
-   * @param sub_conf a subscriber configuration.
+   * @param req_params requester parameters.
+   * @param sub_params subscriber parameters.
    * @param router a patch operation router (with callbacks added).
    */
-  Client(const typename Backend::Config& req_conf,
-         const typename Backend::Config& sub_conf,
+  Client(const typename Socket::Params& req_params,
+         const typename Socket::Params& sub_params,
          const PatchOpRouter<T>& router)
-      : req_(req_conf, bind(&Client::HandleReply, ref(*this), _1, _2))
-      , sub_(sub_conf, bind(&Client::HandleNotification, ref(*this), _1))
+      : req_(req_params, bind(&Client::HandleReply, ref(*this), _1, _2))
+      , sub_(sub_params, bind(&Client::HandleNotification, ref(*this), _1))
       , router_(router) {
     T data;
     to_json(state_, data);
@@ -141,8 +142,8 @@ template <typename T, typename Backend = DefaultBackend> class Client {
     }
   }
 
-  typename Backend::Requester req_;
-  typename Backend::Subscriber sub_;
+  Requester<Socket> req_;
+  Subscriber<Socket> sub_;
   PatchOpRouter<T> router_;
   json state_;
   mutex mtx_;

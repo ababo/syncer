@@ -1,14 +1,13 @@
 /**
  * @file common.h
  * @author Simon Prykhodko
- * @brief Common declarations (also used by backends).
+ * @brief Common declarations.
  */
 
 #ifndef SYNCER_COMMON_H_
 #define SYNCER_COMMON_H_
 
 #include <cstdio>
-#include <functional>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -49,14 +48,14 @@ string string_format(const string& format, Args ... args)
 /** @brief Buffer for textual or binary messages. */
 using Message = string;
 
-/** @brief Callback to handle notifications by Subscriber. */
-using NotificationCallback = function<void(const Message&)>;
+/** @brief Maximal size of transmitted or received message. */
+static const int MAX_MSG_SIZE = 1024 * 1024;
 
-/** @brief Callback to handle requests by Replier. */
-using RequestCallback = function<Message(const Message&)>;
+/** @brief Socket waiting timeout in milliseconds. */
+static const int SOCKET_WAIT_TIMEOUT = 100;
 
-/** @brief Callback to handle replies by Requester. */
-using ReplyCallback = function<void(bool, const Message&)>;
+/** @brief Socket type. */
+enum class SocketType { PUBLISHER, REPLIER, REQUESTER, SUBSCRIBER };
 
 }
 

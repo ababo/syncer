@@ -9,12 +9,16 @@
 
 #include <mutex>
 
-#include "backend.h"
+#include "socket.h"
 #include "json.hpp"
+#include "publisher.h"
+#include "replier.h"
 
 namespace syncer {
 
+using namespace nlohmann;
 using namespace std;
+using namespace std::placeholders;
 
 /**
  * @brief Synchronizing server.
@@ -28,19 +32,19 @@ using namespace std;
  *   - Must have `from_json` and `to_json` function overloads.
  *   - Might have a move constructor (can boost performance).
  */
-template <typename T, typename Backend = DefaultBackend> class Server {
+template <typename T, typename Socket = DefaultSocket> class Server {
  public:
   /**
    * @brief Constructor.
-   * @param rep_conf a replier configuration.
-   * @param pub_conf a publisher configuration.
+   * @param rep_params replier parameters.
+   * @param pub_params publisher parameters.
    * @param data an initial data state.
    */
-  Server(const typename Backend::Config& rep_conf,
-         const typename Backend::Config& pub_conf,
+  Server(const typename Socket::Params& rep_params,
+         const typename Socket::Params& pub_params,
          const T& data)
-      : rep_(rep_conf, bind(&Server::HandleRequest, ref(*this), _1))
-      , pub_(pub_conf) {
+      : rep_(rep_params, bind(&Server::HandleRequest, ref(*this), _1))
+      , pub_(pub_params) {
     to_json(state_, data);
     state_[VERSION_KEY] = ver_;
 
@@ -84,8 +88,8 @@ template <typename T, typename Backend = DefaultBackend> class Server {
     return reply_;
   }
 
-  typename Backend::Replier rep_;
-  typename Backend::Publisher pub_;
+  Replier<Socket> rep_;
+  Publisher<Socket> pub_;
   json state_;
   int ver_ = 0;
   Message reply_;
