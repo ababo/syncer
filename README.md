@@ -137,4 +137,4 @@ Actually Syncer depends on the following libraries:
 2. [JSON](https://github.com/nlohmann/json) (already included).
 3. [Catch](https://github.com/philsquared/Catch) (already included).
 
-As was said, Syncer doesn't need to be built separately. But you can build a Doxygen documentation by `make open-doc` or run unit-tests by `make test`.
+As was said, Syncer doesn't need to be built separately. But you can build a Doxygen documentation by `make open-doc` or run unit-tests by `make run-test`.

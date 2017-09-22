@@ -1,7 +1,7 @@
 PROJECT_NAME = Syncer
 
 GENERATE_LATEX = NO
-HTML_OUTPUT = ./doc
+HTML_OUTPUT = ./build/doc
 
 RECURSIVE = YES
 EXCLUDE = ./test

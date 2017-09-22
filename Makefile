@@ -1,30 +1,36 @@
 CXX_FLAGS := -std=c++11 -Iinclude -Ithird_party -O3
 LD_FLAGS := -lzmq
 
-BUILD_DIR := ./build
-DOC_DIR := ./doc
+SRC_DIR := ./test
+BLD_DIR := ./build
+BIN_DIR := $(BLD_DIR)/test
+DOC_DIR := $(BLD_DIR)/doc
 
-TEST_SRCS := test/main.cc test/sanity.cc
-TESTS_BINARY := ./build/syncer_test
+SRCS := main.cc sanity.cc
+OBJS := $(SRCS:%.cc=$(BIN_DIR)/%.o)
+DEPS := $(SRCS:%.cc=$(BIN_DIR)/%.d)
+BIN := $(BIN_DIR)/test
 
-all: tests
+-include $(DEPS)
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+all: test doc
 
-tests: $(BUILD_DIR)
-	$(CXX) $(CXX_FLAGS) $(TEST_SRCS) $(LD_FLAGS) -o $(TESTS_BINARY)
+$(BIN_DIR)/%.o: $(SRC_DIR)/%.cc
+	mkdir -p $(BIN_DIR)
+	$(CXX) $(CXX_FLAGS) -MMD $< -c -o $@
 
-test: tests
-	$(TESTS_BINARY)
+test: $(OBJS)
+	$(CXX) $(LD_FLAGS) $(OBJS) -o $(BIN)
+
+run-test: $(BIN)
+	$(BIN)
 
 doc:
+	mkdir -p $(DOC_DIR)
 	doxygen
 
-open-doc: doc
+open-doc:
 	open $(DOC_DIR)/index.html
 
 clean:
-	rm -r $(DOC_DIR) $(BUILD_DIR)
-
-.PHONY: all tests test doc open-doc clean
+	rm -r $(BLD_DIR)
