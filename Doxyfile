@@ -6,3 +6,4 @@ HTML_OUTPUT = ./doc
 RECURSIVE = YES
 EXCLUDE = ./test
 EXCLUDE += ./third_party
+USE_MDFILE_AS_MAINPAGE = README.md
