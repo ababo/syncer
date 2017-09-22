@@ -11,9 +11,9 @@ OBJS := $(SRCS:%.cc=$(BIN_DIR)/%.o)
 DEPS := $(SRCS:%.cc=$(BIN_DIR)/%.d)
 BIN := $(BIN_DIR)/test
 
--include $(DEPS)
-
 all: test doc
+
+-include $(DEPS)
 
 $(BIN_DIR)/%.o: $(SRC_DIR)/%.cc
 	mkdir -p $(BIN_DIR)
@@ -22,7 +22,7 @@ $(BIN_DIR)/%.o: $(SRC_DIR)/%.cc
 test: $(OBJS)
 	$(CXX) $(LD_FLAGS) $(OBJS) -o $(BIN)
 
-run-test: $(BIN)
+run-test: test
 	$(BIN)
 
 doc:
@@ -34,3 +34,5 @@ open-doc:
 
 clean:
 	rm -r $(BLD_DIR)
+
+.PHONY: all test run-test doc open-doc clean

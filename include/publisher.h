@@ -19,11 +19,17 @@ namespace syncer {
  */
 template <typename Socket = DefaultSocket> class Publisher {
  public:
+  /** @brief Alias for socket parameters. */
+  using Params = typename Socket::Params;
+
+  /** @brief Alias for socket message. */
+  using Message = typename Socket::Message;
+
   /**
    * @brief Constructor.
-   * @param socket parameters.
+   * @param params socket parameters.
    */
-  Publisher(const typename Socket::Params& params)
+  Publisher(const Params& params)
       : skt_(SocketType::PUBLISHER, params) { }
 
   /**

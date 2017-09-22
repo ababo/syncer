@@ -25,6 +25,12 @@ namespace syncer {
  */
 template <typename Socket = DefaultSocket> class Replier {
  public:
+  /** @brief Alias for socket parameters. */
+  using Params = typename Socket::Params;
+
+  /** @brief Alias for socket message. */
+  using Message = typename Socket::Message;
+
   /** @brief Callback to handle requests. */
   using Callback = function<Message(const Message&)>;
 
@@ -33,7 +39,7 @@ template <typename Socket = DefaultSocket> class Replier {
    * @param params socket parameters.
    * @param cb a callback for request processing.
    */
-  Replier(const typename Socket::Params& params, Callback cb)
+  Replier(const Params& params, Callback cb)
       : exit_(false)
       , thr_(&Replier::Process, this, params, cb) { }
 
@@ -44,9 +50,9 @@ template <typename Socket = DefaultSocket> class Replier {
   }
 
  private:
-  void Process(const typename Socket::Params& params, Callback cb) {
+  void Process(const Params& params, Callback cb) {
     Message msg;
-    msg.reserve(MAX_MSG_SIZE);
+    msg.reserve(Message::MAX_SIZE);
     Socket skt(SocketType::REPLIER, params);
 
     while (!exit_) {

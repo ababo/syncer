@@ -34,15 +34,19 @@ using namespace std::placeholders;
  */
 template <typename T, typename Socket = DefaultSocket> class Server {
  public:
+  /** @brief Alias for socket parameters. */
+  using Params = typename Socket::Params;
+
+  /** @brief Alias for socket message. */
+  using Message = typename Socket::Message;
+
   /**
    * @brief Constructor.
    * @param rep_params replier parameters.
    * @param pub_params publisher parameters.
    * @param data an initial data state.
    */
-  Server(const typename Socket::Params& rep_params,
-         const typename Socket::Params& pub_params,
-         const T& data)
+  Server(const Params& rep_params, const Params& pub_params, const T& data)
       : rep_(rep_params, bind(&Server::HandleRequest, ref(*this), _1))
       , pub_(pub_params) {
     to_json(state_, data);

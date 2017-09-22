@@ -21,6 +21,7 @@
 #ifndef SYNCER_CUSTOM_DEFAULT_SOCKET
 #include "zmq_socket.h"
 namespace syncer {
+/** Default socket type. */
 using DefaultSocket = ZMQSocket;
 }
 #endif // SYNCER_CUSTOM_DEFAULT_SOCKET

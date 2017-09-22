@@ -41,14 +41,20 @@ using namespace std::placeholders;
  */
 template <typename T, typename Socket = DefaultSocket> class Client {
  public:
+  /** @brief Alias for socket parameters. */
+  using Params = typename Socket::Params;
+
+  /** @brief Alias for socket message. */
+  using Message = typename Socket::Message;
+
   /**
    * @brief Constructor.
    * @param req_params requester parameters.
    * @param sub_params subscriber parameters.
    * @param router a patch operation router (with callbacks added).
    */
-  Client(const typename Socket::Params& req_params,
-         const typename Socket::Params& sub_params,
+  Client(const Params& req_params,
+         const Params& sub_params,
          const PatchOpRouter<T>& router)
       : req_(req_params, bind(&Client::HandleReply, ref(*this), _1, _2))
       , sub_(sub_params, bind(&Client::HandleNotification, ref(*this), _1))
@@ -83,7 +89,7 @@ template <typename T, typename Socket = DefaultSocket> class Client {
       return;
     }
 
-    json after = json::parse(msg);
+    json after = json::parse(msg.body());
 
     {
       lock_guard<mutex> _(mtx_);
@@ -93,12 +99,12 @@ template <typename T, typename Socket = DefaultSocket> class Client {
   }
 
   void HandleNotification(const Message& msg) {
-    if (msg.empty()) {
+    if (msg.body_size() == 0) {
       req_.Request(Message());
       return;
     }
 
-    auto diff = json::parse(msg);
+    auto diff = json::parse(msg.body());
 
     for (auto it = diff.begin(); it != diff.end(); ++it) {
       if ((*it)["path"] == VERSION_PATH) {

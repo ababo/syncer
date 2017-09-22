@@ -29,6 +29,12 @@ using namespace std;
  */
 template <typename Socket = DefaultSocket> class Requester {
  public:
+  /** @brief Alias for socket parameters. */
+  using Params = typename Socket::Params;
+
+  /** @brief Alias for socket message. */
+  using Message = typename Socket::Message;
+
   /** @brief Callback to handle replies. */
   using Callback = function<void(bool, const Message&)>;
 
@@ -40,7 +46,7 @@ template <typename Socket = DefaultSocket> class Requester {
    * @param params socket parameters.
    * @param cb a callback for reply processing.
    */
-  Requester(const typename Socket::Params& params, Callback cb)
+  Requester(const Params& params, Callback cb)
       : exit_(false)
       , thr_(&Requester::Process, this, params, cb) { }
 
@@ -56,6 +62,7 @@ template <typename Socket = DefaultSocket> class Requester {
    * @details If the connected replier doesn't respond before expiring the
    * specified timeout or some another error occurs, the provided callback is
    * triggered to indicate failure.
+   * @param req a request message.
    * @param timeout a timeout in milliseconds.
   */
   void Request(const Message& req, int timeout = WAIT_TIMEOUT) {
@@ -67,9 +74,9 @@ template <typename Socket = DefaultSocket> class Requester {
   }
 
  private:
-  void Process(const typename Socket::Params& params, Callback cb) {
-    Message msg;
-    msg.reserve(MAX_MSG_SIZE);
+  void Process(const Params& params, Callback cb) {
+    typename Socket::Message msg;
+    msg.reserve(Message::MAX_SIZE);
     Socket skt(SocketType::REQUESTER, params);
 
     for (;;) {
@@ -84,7 +91,7 @@ template <typename Socket = DefaultSocket> class Requester {
 
       bool success = false;
       for (int waited = 0; !exit_ && waited < timeout_; ) {
-        int tmp = SOCKET_WAIT_TIMEOUT; // to avoid linker error
+        int tmp = Socket::WAIT_TIMEOUT; // to avoid linker error
         int timeout = min(tmp, timeout_ - waited);
 
         if (skt.WaitToReceive(timeout)) {

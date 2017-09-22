@@ -51,12 +51,13 @@ template <typename T> class PatchOpRouter {
    * @brief Constructor.
    * @param path_re a regular expression to match the path (can contain groups
    * to be extracted and passed to the corresponding callback).
+   * @param ops a set of patch operations to match against (e.g. PATCH_OP_ANY).
+   * @param cb a callback to handle patch operations.
    *
    * Requirements for value type template parameter:
    *   - Must have a default constructor.
    *   - Must have `from_json` and `to_json` function overloads.
    *   - Might have a move constructor (can boost performance).
-   * @param ops a set of patch operations to match against (e.g. PATCH_OP_ANY).
    */
   template <typename T2> void AddCallback(const string& path_re,
                                           PatchOpSet ops,

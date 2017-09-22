@@ -22,41 +22,150 @@ using namespace std;
  */
 class ZMQSocket {
  public:
-
   /** @brief Socket parameters. */
   struct Params {
     /**
-     * @brief Default constructor.
+     * @brief Constructor.
      * @details Part of the socket template API.
+     * @param conn_str a connection string.
+     * @param subj a subscriber's subject.
      */
-    Params() {
-      sndhwm = 0;
-      rcvhwm = 0;
-      io_threads = 1;
-    }
-
-    /**
-     * @brief Connection string constructor.
-     * @details Part of the socket template API.
-     * @param conn_str a ZeroMQ endpoint.
-     */
-    Params(const char* conn_str)
-        : Params() {
-      this->endpoint = conn_str;
+    Params(const char* conn_str, const char* subj = nullptr) {
+      endpoint = conn_str;
+      if (subj != nullptr) {
+        filter = subj;
+      }
     }
 
     /** @brief ZeroMQ endpoint. */
     string endpoint;
 
+    /** @brief ZeroMQ subscriber's filter. */
+    string filter;
+
     /** @brief ZeroMQ ZMQ_SNDHWM value. */
-    int sndhwm;
+    int sndhwm = 0;
 
     /** @brief ZeroMQ ZMQ_RCVHWM value. */
-    int rcvhwm;
+    int rcvhwm = 0;
 
     /** @brief Size of ZeroMQ thread pool. */
-    int io_threads;
+    int io_threads = 1;
   };
+
+  /**
+   * @brief Socket message.
+   * @details Part of the socket template API.
+   */
+  class Message {
+   public:
+    /**
+     * @brief Maximal message capacity.
+     * @details Part of the socket template API.
+     */
+    static const int MAX_SIZE = 1024 * 1024;
+
+    /**
+     * @brief Constructor.
+     * @details Part of the socket template API.
+     */
+    Message() {
+      set("");
+    }
+
+    /**
+     * @brief Constructor.
+     * @details Part of the socket template API.
+     * @param body a message body.
+     */
+    Message(const string& body) {
+      set(body);
+    }
+
+    /**
+     * @brief Constructor.
+     * @details Part of the socket template API.
+     * @param subj a message subject.
+     * @param body a message body.
+     */
+    Message(const string& subj, const string& body) {
+      set(subj, body);
+    }
+
+    /**
+     * @brief Reserve a message capacity.
+     * @details Part of the socket template API.
+     * @param size a message capacity.
+     */
+    void reserve(size_t size) {
+      data_.reserve(size);
+    }
+
+    /**
+     * @brief Set message content.
+     * @details Part of the socket template API.
+     * @param body a message body.
+     */
+    void set(const string& body) {
+      data_.push_back(0);
+      data_ += body;
+      ssize_ = 0;
+    }
+
+    /**
+     * @brief Set message content.
+     * @details Part of the socket template API.
+     * @param subj a message subject.
+     * @param body a message body.
+     */
+    void set(const string& subj, const string& body) {
+      data_ = subj;
+      data_.push_back(0);
+      data_ += body;
+      ssize_ = subj.size();
+    }
+
+    /**
+     * @brief Message subject getter.
+     * @details Part of the socket template API.
+     */
+    const char* subject() const {
+      return data_.c_str();
+    }
+
+    /**
+     * @brief Message subject size.
+     * @details Part of the socket template API.
+     */
+    size_t subject_size() const {
+      return ssize_;
+    }
+
+    /**
+     * @brief Message body getter.
+     * @details Part of the socket template API.
+     */
+    const char* body() const {
+      return &data_.c_str()[ssize_ + 1];
+    }
+
+    /**
+     * @brief Message body size.
+     * @details Part of the socket template API.
+     */
+    size_t body_size() const {
+      return data_.size() - ssize_ - 1;
+    }
+
+   private:
+    friend class ZMQSocket;
+
+    string data_;
+    int ssize_ = 0;
+  };
+
+  /** @brief Waiting timeout in milliseconds. */
+  static const int WAIT_TIMEOUT = 100;
 
   /**
    * @brief Constructor.
@@ -91,7 +200,7 @@ class ZMQSocket {
    * @return `true` if succeeded.
    */
   bool Send(const Message& msg) {
-    if (zmq_send(skt_, msg.c_str(), msg.size(), 0) == -1) {
+    if (zmq_send(skt_, msg.data_.c_str(), msg.data_.size(), 0) == -1) {
       SYNCER_LOG_FMTE("failed to send from ZMQ socket");
       return false;
     }
@@ -105,11 +214,11 @@ class ZMQSocket {
    * @return `true` if succeeded.
    */
   bool Receive(Message& msg) {
-    msg.resize(MAX_MSG_SIZE);
+    msg.data_.resize(Message::MAX_SIZE);
 
-    int num = zmq_recv(skt_, &msg[0], MAX_MSG_SIZE, 0);
+    int num = zmq_recv(skt_, &msg.data_[0], Message::MAX_SIZE, 0);
     if (num != -1) {
-      msg.resize(num);
+      msg.data_.resize(num);
       return true;
     } else {
       SYNCER_LOG_FMTE("failed to receive from ZMQ socket");
@@ -123,7 +232,7 @@ class ZMQSocket {
    * @param timeout a timeout in milliseconds (-1 to wait forever).
    * @return `true` if a message has arrived.
    */
-  bool WaitToReceive(int timeout = SOCKET_WAIT_TIMEOUT) {
+  bool WaitToReceive(int timeout = WAIT_TIMEOUT) {
     zmq_pollitem_t item;
     item.socket = skt_;
     item.events = ZMQ_POLLIN;
@@ -186,8 +295,9 @@ class ZMQSocket {
         SYNCER_LOG_FMTE("failed to bind ZMQ socket");
       }
     } else {
-      if (type == ZMQ_SUB
-            && zmq_setsockopt(skt, ZMQ_SUBSCRIBE, nullptr, 0) == -1) {
+      if (type == ZMQ_SUB && zmq_setsockopt(skt, ZMQ_SUBSCRIBE,
+                                            params.filter.c_str(),
+                                            params.filter.size()) == -1) {
         SYNCER_LOG_FMTE("failed to set ZMQ_SUBSCRIBE for ZMQ socket");
       }
       if (zmq_connect(skt, params.endpoint.c_str()) == -1) {

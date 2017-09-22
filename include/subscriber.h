@@ -24,6 +24,12 @@ namespace syncer {
  */
 template <typename Socket = DefaultSocket> class Subscriber {
  public:
+  /** @brief Alias for socket parameters. */
+  using Params = typename Socket::Params;
+
+  /** @brief Alias for socket message. */
+  using Message = typename Socket::Message;
+
   /** @brief Callback to handle notifications. */
   using Callback = function<void(const Message&)>;
 
@@ -32,7 +38,7 @@ template <typename Socket = DefaultSocket> class Subscriber {
    * @param params socket parameters.
    * @param cb a callback for notification processing.
    */
-  Subscriber(const typename Socket::Params& params, Callback cb)
+  Subscriber(const Params& params, Callback cb)
       : exit_(false)
       , thr_(&Subscriber::Process, this, params, cb) { }
 
@@ -43,9 +49,9 @@ template <typename Socket = DefaultSocket> class Subscriber {
   }
 
  private:
-  void Process(const typename Socket::Params& params, Callback cb) {
+  void Process(const Params& params, Callback cb) {
     Message msg;
-    msg.reserve(MAX_MSG_SIZE);
+    msg.reserve(Message::MAX_SIZE);
     Socket skt(SocketType::SUBSCRIBER, params);
 
     while (!exit_) {
