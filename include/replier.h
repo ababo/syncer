@@ -32,7 +32,7 @@ template <typename Socket = DefaultSocket> class Replier {
   using Message = typename Socket::Message;
 
   /** @brief Callback to handle requests. */
-  using Callback = function<Message(const Message&)>;
+  using Callback = std::function<Message(const Message&)>;
 
   /**
    * @brief Constructor.
@@ -63,8 +63,8 @@ template <typename Socket = DefaultSocket> class Replier {
     }
   }
 
-  atomic_bool exit_;
-  thread thr_;
+  std::atomic_bool exit_;
+  std::thread thr_;
 };
 
 }

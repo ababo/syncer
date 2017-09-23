@@ -31,7 +31,7 @@ template <typename Socket = DefaultSocket> class Subscriber {
   using Message = typename Socket::Message;
 
   /** @brief Callback to handle notifications. */
-  using Callback = function<void(const Message&)>;
+  using Callback = std::function<void(const Message&)>;
 
   /**
    * @brief Constructor.
@@ -62,8 +62,8 @@ template <typename Socket = DefaultSocket> class Subscriber {
     }
   }
 
-  atomic_bool exit_;
-  thread thr_;
+  std::atomic_bool exit_;
+  std::thread thr_;
 };
 
 }

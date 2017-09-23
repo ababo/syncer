@@ -14,8 +14,6 @@
 
 namespace syncer {
 
-using namespace std;
-
 /**
  * @brief ZeroMQ socket.
  * @details Depending on type binds or connects at time of construction.
@@ -38,10 +36,10 @@ class ZMQSocket {
     }
 
     /** @brief ZeroMQ endpoint. */
-    string endpoint;
+    std::string endpoint;
 
     /** @brief ZeroMQ subscriber's filter. */
-    string filter;
+    std::string filter;
 
     /** @brief ZeroMQ ZMQ_SNDHWM value. */
     int sndhwm = 0;
@@ -78,7 +76,7 @@ class ZMQSocket {
      * @details Part of the socket template API.
      * @param body a message body.
      */
-    Message(const string& body) {
+    Message(const std::string& body) {
       set(body);
     }
 
@@ -88,7 +86,7 @@ class ZMQSocket {
      * @param subj a message subject.
      * @param body a message body.
      */
-    Message(const string& subj, const string& body) {
+    Message(const std::string& subj, const std::string& body) {
       set(subj, body);
     }
 
@@ -106,7 +104,7 @@ class ZMQSocket {
      * @details Part of the socket template API.
      * @param body a message body.
      */
-    void set(const string& body) {
+    void set(const std::string& body) {
       data_.push_back(0);
       data_ += body;
       ssize_ = 0;
@@ -118,7 +116,7 @@ class ZMQSocket {
      * @param subj a message subject.
      * @param body a message body.
      */
-    void set(const string& subj, const string& body) {
+    void set(const std::string& subj, const std::string& body) {
       data_ = subj;
       data_.push_back(0);
       data_ += body;
@@ -160,7 +158,7 @@ class ZMQSocket {
    private:
     friend class ZMQSocket;
 
-    string data_;
+    std::string data_;
     int ssize_ = 0;
   };
 
@@ -197,32 +195,26 @@ class ZMQSocket {
    * @brief Send message.
    * @details Part of the socket template API.
    * @param msg a message to send.
-   * @return `true` if succeeded.
    */
-  bool Send(const Message& msg) {
+  void Send(const Message& msg) {
     if (zmq_send(skt_, msg.data_.c_str(), msg.data_.size(), 0) == -1) {
       SYNCER_LOG_FMTE("failed to send from ZMQ socket");
-      return false;
     }
-    return true;
   }
 
   /**
    * @brief Receive message.
    * @details Part of the socket template API.
    * @param msg a message to receive.
-   * @return `true` if succeeded.
    */
-  bool Receive(Message& msg) {
+  void Receive(Message& msg) {
     msg.data_.resize(Message::MAX_SIZE);
 
     int num = zmq_recv(skt_, &msg.data_[0], Message::MAX_SIZE, 0);
     if (num != -1) {
       msg.data_.resize(num);
-      return true;
     } else {
       SYNCER_LOG_FMTE("failed to receive from ZMQ socket");
-      return false;
     }
   }
 

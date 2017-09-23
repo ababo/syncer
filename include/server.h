@@ -16,10 +16,6 @@
 
 namespace syncer {
 
-using namespace nlohmann;
-using namespace std;
-using namespace std::placeholders;
-
 /**
  * @brief Synchronizing server.
  * @details It creates both replier and publisher at time of construction.
@@ -47,13 +43,15 @@ template <typename T, typename Socket = DefaultSocket> class Server {
    * @param data an initial data state.
    */
   Server(const Params& rep_params, const Params& pub_params, const T& data)
-      : rep_(rep_params, bind(&Server::HandleRequest, ref(*this), _1))
+      : rep_(rep_params, std::bind(&Server::HandleRequest,
+                                   std::ref(*this),
+                                   std::placeholders::_1))
       , pub_(pub_params) {
     to_json(state_, data);
     state_[VERSION_KEY] = ver_;
 
     {
-      lock_guard<mutex> _(mtx_);
+      std::lock_guard<std::mutex> _(mtx_);
       reply_ = state_.dump();
     }
 
@@ -66,17 +64,17 @@ template <typename T, typename Socket = DefaultSocket> class Server {
    * @param data a new data state.
    */
   void Update(const T& data) {
-    json next;
+    nlohmann::json next;
     to_json(next, data);
     next[VERSION_KEY] = ver_ + 1;
 
-    auto diff = json::diff(state_, next);
+    auto diff = nlohmann::json::diff(state_, next);
     if (diff.size() > 1) {
       state_ = next;
       ver_++;
 
       {
-        lock_guard<mutex> _(mtx_);
+        std::lock_guard<std::mutex> _(mtx_);
         reply_ = state_.dump();
       }
 
@@ -88,16 +86,16 @@ template <typename T, typename Socket = DefaultSocket> class Server {
   static constexpr char const * VERSION_KEY = "__syncer_data_version";
 
   Message HandleRequest(const Message&) {
-    lock_guard<mutex> _(mtx_);
+    std::lock_guard<std::mutex> _(mtx_);
     return reply_;
   }
 
-  Replier<Socket> rep_;
-  Publisher<Socket> pub_;
-  json state_;
+  nlohmann::json state_;
   int ver_ = 0;
   Message reply_;
-  mutex mtx_;
+  std::mutex mtx_;
+  Publisher<Socket> pub_;
+  Replier<Socket> rep_; // to be destructed before other fields
 };
 
 }

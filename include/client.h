@@ -17,9 +17,6 @@
 
 namespace syncer {
 
-using namespace std;
-using namespace std::placeholders;
-
 /**
  * @brief Synchronized client.
  * @details It creates both requester and subscriber at time of construction.
@@ -56,11 +53,16 @@ template <typename T, typename Socket = DefaultSocket> class Client {
   Client(const Params& req_params,
          const Params& sub_params,
          const PatchOpRouter<T>& router)
-      : req_(req_params, bind(&Client::HandleReply, ref(*this), _1, _2))
-      , sub_(sub_params, bind(&Client::HandleNotification, ref(*this), _1))
+      : req_(req_params, std::bind(&Client::HandleReply,
+                                   std::ref(*this),
+                                   std::placeholders::_1,
+                                   std::placeholders::_2))
+      , sub_(sub_params, std::bind(&Client::HandleNotification,
+                                   std::ref(*this),
+                                   std::placeholders::_1))
       , router_(router) {
     T data;
-    to_json(state_, data);
+    nlohmann::to_json(state_, data);
     state_[VERSION_KEY] = 0;
 
     req_.Request(Message());
@@ -71,10 +73,12 @@ template <typename T, typename Socket = DefaultSocket> class Client {
    * @return a current data state.
    */
   T data() const {
+    using namespace std;
+
     T data;
     {
       lock_guard<mutex> _(const_cast<mutex&>(mtx_));
-      from_json(state_, data);
+      nlohmann::from_json(state_, data);
     }
     return move(data);
   }
@@ -84,15 +88,17 @@ template <typename T, typename Socket = DefaultSocket> class Client {
   static constexpr char const * VERSION_KEY = &VERSION_PATH[1];
 
   void HandleReply(bool success, const Message& msg) {
+    using namespace nlohmann;
+
     if (!success) {
       SYNCER_LOG_FMT("failed to receive server's reply");
       return;
     }
 
-    json after = json::parse(msg.body());
+    auto after = json::parse(msg.body());
 
     {
-      lock_guard<mutex> _(mtx_);
+      std::lock_guard<std::mutex> _(mtx_);
       HandleDiff(json::diff(state_, after));
       state_ = after;
     }
@@ -104,11 +110,11 @@ template <typename T, typename Socket = DefaultSocket> class Client {
       return;
     }
 
-    auto diff = json::parse(msg.body());
+    auto diff = nlohmann::json::parse(msg.body());
 
     for (auto it = diff.begin(); it != diff.end(); ++it) {
       if ((*it)["path"] == VERSION_PATH) {
-        lock_guard<mutex> _(mtx_);
+        std::lock_guard<std::mutex> _(mtx_);
 
         int ver = state_[VERSION_KEY];
         if ((*it)["value"] == ver + 1) {
@@ -123,13 +129,13 @@ template <typename T, typename Socket = DefaultSocket> class Client {
     }
   }
 
-  void HandleDiff(const json& diff) {
+  void HandleDiff(const nlohmann::json& diff) {
     T data;
     from_json(state_, data);
 
     for (auto it = diff.begin(); it != diff.end(); ++it) {
       PatchOp op;
-      string ops = (*it)["op"];
+      std::string ops = (*it)["op"];
       if (ops == "add") {
         op = PATCH_OP_ADD;
       } else if (ops == "remove") {
@@ -140,7 +146,7 @@ template <typename T, typename Socket = DefaultSocket> class Client {
         continue;
       }
 
-      json val;
+      nlohmann::json val;
       if (op != PATCH_OP_REMOVE) {
         val = ((*it)["value"]);
       }
@@ -148,11 +154,11 @@ template <typename T, typename Socket = DefaultSocket> class Client {
     }
   }
 
-  Requester<Socket> req_;
-  Subscriber<Socket> sub_;
   PatchOpRouter<T> router_;
-  json state_;
-  mutex mtx_;
+  nlohmann::json state_;
+  std::mutex mtx_;
+  Requester<Socket> req_; // to be destructed after sub_, but before others 
+  Subscriber<Socket> sub_;
 };
 
 }

@@ -1,3 +1,4 @@
+#include <atomic>
 #include <chrono>
 #include <regex>
 #include <thread>
@@ -9,6 +10,7 @@
 namespace syncer {
 namespace test {
 
+using namespace std;
 using namespace std::chrono;
 
 TEST_CASE("sanity") {
@@ -18,7 +20,7 @@ TEST_CASE("sanity") {
   data.baz = 321;
   Server<Data> server("tcp://*:5000", "tcp://*:5001", data);
 
-  auto fired = 0;
+  atomic_int fired(0);
   PatchOpRouter<Data> router;
   router.AddCallback<int>(R"(/ints/(\d+))", PATCH_OP_ADD,
     [&] (const Data&, const smatch& match, PatchOp op, int val) {

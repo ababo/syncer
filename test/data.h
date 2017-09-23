@@ -10,45 +10,42 @@
 namespace syncer {
 namespace test {
 
-using namespace nlohmann;
-using namespace std;
-
 struct Item {
   int foo;
-  string bar;
+  std::string bar;
 };
 
 static inline bool operator==(const Item& a, const Item& b) {
   return a.foo == b.foo && a.bar == b.bar;
 }
 
-static inline void to_json(json& j, const Item& c) {
-  j = json();
+static inline void to_json(nlohmann::json& j, const Item& c) {
+  j = nlohmann::json();
   j["foo"] = c.foo;
   j["bar"] = c.bar;
 }
 
-static inline void from_json(const json& j, Item& c) {
+static inline void from_json(const nlohmann::json& j, Item& c) {
   c.foo = j.at("foo").get<int>();
-  c.bar = j.at("bar").get<string>();
+  c.bar = j.at("bar").get<std::string>();
 }
 
 struct Data {
-  vector<int> ints;
-  map<string, Item> items;
+  std::vector<int> ints;
+  std::map<std::string, Item> items;
   int baz;
 };
 
-static inline void to_json(json& j, const Data& c) {
-  j = json();
+static inline void to_json(nlohmann::json& j, const Data& c) {
+  j = nlohmann::json();
   j["ints"] = c.ints;
   j["items"] = c.items;
   j["baz"] = c.baz;
 }
 
-static inline void from_json(const json& j, Data& c) {
-  c.ints = j.at("ints").get<vector<int>>();
-  c.items = j.at("items").get<map<string, Item>>();
+static inline void from_json(const nlohmann::json& j, Data& c) {
+  c.ints = j.at("ints").get<std::vector<int>>();
+  c.items = j.at("items").get<std::map<std::string, Item>>();
   c.baz = j.at("baz").get<int>();
 }
 

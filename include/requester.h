@@ -18,8 +18,6 @@
 
 namespace syncer {
 
-using namespace std;
-
 /**
  * @brief Generic requester.
  * @details It creates and connects a REQUESTER-socket at time of construction.
@@ -36,7 +34,7 @@ template <typename Socket = DefaultSocket> class Requester {
   using Message = typename Socket::Message;
 
   /** @brief Callback to handle replies. */
-  using Callback = function<void(bool, const Message&)>;
+  using Callback = std::function<void(bool, const Message&)>;
 
   /** @brief Default request waiting timeout in milliseconds. */
   static const int WAIT_TIMEOUT = 1000;
@@ -67,7 +65,7 @@ template <typename Socket = DefaultSocket> class Requester {
   */
   void Request(const Message& req, int timeout = WAIT_TIMEOUT) {
     {
-      lock_guard<mutex> _(mtx_);
+      std::lock_guard<std::mutex> _(mtx_);
       req_ = req, timeout_ = timeout;
     }
     cv_.notify_one();
@@ -75,6 +73,8 @@ template <typename Socket = DefaultSocket> class Requester {
 
  private:
   void Process(const Params& params, Callback cb) {
+    using namespace std;
+
     typename Socket::Message msg;
     msg.reserve(Message::MAX_SIZE);
     Socket skt(SocketType::REQUESTER, params);
@@ -115,12 +115,12 @@ template <typename Socket = DefaultSocket> class Requester {
     }
   }
 
-  atomic_bool exit_;
-  thread thr_;
+  std::atomic_bool exit_;
+  std::thread thr_;
   int timeout_;
   Message req_;
-  mutex mtx_;
-  condition_variable cv_;
+  std::mutex mtx_;
+  std::condition_variable cv_;
 };
 
 }

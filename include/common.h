@@ -20,7 +20,7 @@
  * @brief Log a message.
  * @details To customize logging this macro should be redefined by user.
  */
-#define SYNCER_LOG(msg) { cerr << "syncer: " << endl; }
+#define SYNCER_LOG(msg) { std::cerr << "syncer: " << std::endl; }
 
 #endif // SYNCER_LOG
 
@@ -35,16 +35,14 @@
 /** @brief Syncer stuff. */
 namespace syncer {
 
-using namespace std;
-
 /** @brief Format standard strings as sprintf() does. */
 template<typename ... Args>
-string string_format(const string& format, Args ... args)
-{
-    size_t size = snprintf(nullptr, 0, format.c_str(), args ...) + 1;
-    unique_ptr<char[]> buf(new char[size]);
-    snprintf(buf.get(), size, format.c_str(), args ...);
-    return string(buf.get(), buf.get() + size - 1);
+std::string string_format(const std::string& format, Args ... args) {
+  using namespace std;
+  size_t size = snprintf(nullptr, 0, format.c_str(), args ...) + 1;
+  unique_ptr<char[]> buf(new char[size]);
+  snprintf(buf.get(), size, format.c_str(), args ...);
+  return string(buf.get(), buf.get() + size - 1);
 }
 
 /** @brief Socket type. */
