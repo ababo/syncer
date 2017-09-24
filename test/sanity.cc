@@ -3,8 +3,6 @@
 #include <regex>
 #include <thread>
 
-#define JSON_NOEXCEPTION
-
 #include "catch.hpp"
 #include "data.h"
 #include "syncer.h"

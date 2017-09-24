@@ -61,11 +61,14 @@ template <typename T, typename Socket = DefaultSocket> class Client {
                                    std::ref(*this),
                                    std::placeholders::_1))
       , router_(router) {
-    T data;
-    nlohmann::to_json(state_, data);
-    state_[VERSION_KEY] = 0;
+    SYNCER_TRY {
+      T data;
+      nlohmann::to_json(state_, data);
+      state_[VERSION_KEY] = 0;
 
-    req_.Request(Message());
+      req_.Request(Message());
+    }
+    SYNCER_CATCH_LOG("failed to construct client")
   }
 
   /**
@@ -76,10 +79,12 @@ template <typename T, typename Socket = DefaultSocket> class Client {
     using namespace std;
 
     T data;
-    {
+    SYNCER_TRY {
       lock_guard<mutex> _(const_cast<mutex&>(mtx_));
       nlohmann::from_json(state_, data);
     }
+    SYNCER_CATCH_LOG("failed to construct data")
+
     return move(data);
   }
 
@@ -95,13 +100,16 @@ template <typename T, typename Socket = DefaultSocket> class Client {
       return;
     }
 
-    auto after = json::parse(msg.body());
+    SYNCER_TRY {
+      auto after = json::parse(msg.body());
 
-    {
-      std::lock_guard<std::mutex> _(mtx_);
-      HandleDiff(json::diff(state_, after));
-      state_ = after;
+      {
+        std::lock_guard<std::mutex> _(mtx_);
+        HandleDiff(json::diff(state_, after));
+        state_ = after;
+      }
     }
+    SYNCER_CATCH_LOG("failed to handle reply")
   }
 
   void HandleNotification(const Message& msg) {
@@ -110,48 +118,54 @@ template <typename T, typename Socket = DefaultSocket> class Client {
       return;
     }
 
-    auto diff = nlohmann::json::parse(msg.body());
+    SYNCER_TRY {
+      auto diff = nlohmann::json::parse(msg.body());
 
-    for (auto it = diff.begin(); it != diff.end(); ++it) {
-      if ((*it)["path"] == VERSION_PATH) {
-        std::lock_guard<std::mutex> _(mtx_);
+      for (auto it = diff.begin(); it != diff.end(); ++it) {
+        if ((*it)["path"] == VERSION_PATH) {
+          std::lock_guard<std::mutex> _(mtx_);
 
-        int ver = state_[VERSION_KEY];
-        if ((*it)["value"] == ver + 1) {
-          HandleDiff(diff);
-          state_ = state_.patch(diff);
-        } else {
-          req_.Request(Message());
+          int ver = state_[VERSION_KEY];
+          if ((*it)["value"] == ver + 1) {
+            HandleDiff(diff);
+            state_ = state_.patch(diff);
+          } else {
+            req_.Request(Message());
+          }
+
+          break;
         }
-
-        break;
       }
     }
+    SYNCER_CATCH_LOG("failed to handle notification")
   }
 
   void HandleDiff(const nlohmann::json& diff) {
-    T data;
-    from_json(state_, data);
+    SYNCER_TRY {
+      T data;
+      from_json(state_, data);
 
-    for (auto it = diff.begin(); it != diff.end(); ++it) {
-      PatchOp op;
-      std::string ops = (*it)["op"];
-      if (ops == "add") {
-        op = PATCH_OP_ADD;
-      } else if (ops == "remove") {
-        op = PATCH_OP_REMOVE;
-      } else if (ops == "replace") {
-        op = PATCH_OP_REPLACE;
-      } else {
-        continue;
-      }
+      for (auto it = diff.begin(); it != diff.end(); ++it) {
+        PatchOp op;
+        std::string ops = (*it)["op"];
+        if (ops == "add") {
+          op = PATCH_OP_ADD;
+        } else if (ops == "remove") {
+          op = PATCH_OP_REMOVE;
+        } else if (ops == "replace") {
+          op = PATCH_OP_REPLACE;
+        } else {
+          continue;
+        }
 
-      nlohmann::json val;
-      if (op != PATCH_OP_REMOVE) {
-        val = ((*it)["value"]);
+        nlohmann::json val;
+        if (op != PATCH_OP_REMOVE) {
+          val = ((*it)["value"]);
+        }
+        router_.HandleOp(data, (*it)["path"], op, val);
       }
-      router_.HandleOp(data, (*it)["path"], op, val);
     }
+    SYNCER_CATCH_LOG("failed to handle data diff")
   }
 
   PatchOpRouter<T> router_;

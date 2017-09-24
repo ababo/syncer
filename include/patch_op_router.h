@@ -69,7 +69,10 @@ template <typename T> class PatchOpRouter {
           PatchOp op, const nlohmann::json& value) {
         T2 typed;
         if (op != PATCH_OP_REMOVE) {
-          from_json(value, typed);
+          SYNCER_TRY {
+            from_json(value, typed);
+          }
+          SYNCER_CATCH_LOG("failed to construct JSON patch operation value")
         }
         cb(data, match, op, typed);
     };

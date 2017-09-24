@@ -170,7 +170,7 @@ class ZMQSocket {
 
   /**
    * @brief Publish/subscribe connection period in milliseconds.
-   * @detail This is an empirically obtained maximum of connection time
+   * @details This is an empirically obtained maximum of connection time
    * between publisher and subscribers. Part of the socket template API.
    */
   static const int PUB_SUB_CONNECT_PERIOD = 250;
@@ -208,7 +208,7 @@ class ZMQSocket {
    */
   void Send(const Message& msg) {
     if (zmq_send(skt_, msg.data_.c_str(), msg.data_.size(), 0) == -1) {
-      SYNCER_LOG_FMTE("failed to send from ZMQ socket");
+      SYNCER_LOG_ERROR("failed to send from ZMQ socket");
     }
   }
 
@@ -224,7 +224,7 @@ class ZMQSocket {
     if (num != -1) {
       msg.data_.resize(num);
     } else {
-      SYNCER_LOG_FMTE("failed to receive from ZMQ socket");
+      SYNCER_LOG_ERROR("failed to receive from ZMQ socket");
     }
   }
 
@@ -241,7 +241,7 @@ class ZMQSocket {
 
     auto num = zmq_poll(&item, 1, timeout);
     if (num == -1) {
-      SYNCER_LOG_FMTE("failed to poll ZMQ socket");
+      SYNCER_LOG_ERROR("failed to poll ZMQ socket");
       return false;
     }
 
@@ -264,12 +264,12 @@ class ZMQSocket {
   static void* CreateContext(const Params& params) {
     auto ctx = zmq_ctx_new();
     if (ctx == nullptr) {
-      SYNCER_LOG_FMTE("failed to create ZMQ context");
+      SYNCER_LOG_ERROR("failed to create ZMQ context");
       return nullptr;
     }
 
     if (zmq_ctx_set(ctx, ZMQ_IO_THREADS, params.io_threads) == -1) {
-      SYNCER_LOG_FMTE("failed to set ZMQ_IO_THREADS for ZMQ context");
+      SYNCER_LOG_ERROR("failed to set ZMQ_IO_THREADS for ZMQ context");
     }
 
     return ctx;
@@ -278,32 +278,32 @@ class ZMQSocket {
   static void* CreateSocket(void* ctx, int type, const Params& params) {
     void* skt = zmq_socket(ctx, type);
     if (skt == nullptr) {
-      SYNCER_LOG_FMTE("failed to create ZMQ socket");
+      SYNCER_LOG_ERROR("failed to create ZMQ socket");
       return nullptr;
     }
 
     int val = params.sndhwm;
     if (zmq_setsockopt(skt, ZMQ_SNDHWM, &val, sizeof(val)) == -1) {
-      SYNCER_LOG_FMTE("failed to set ZMQ_SNDHWM for ZMQ socket");
+      SYNCER_LOG_ERROR("failed to set ZMQ_SNDHWM for ZMQ socket");
     }
 
     val = params.rcvhwm;
     if (zmq_setsockopt(skt, ZMQ_RCVHWM, &val, sizeof(val)) == -1) {
-      SYNCER_LOG_FMTE("failed to set ZMQ_RCVHWM for ZMQ socket");
+      SYNCER_LOG_ERROR("failed to set ZMQ_RCVHWM for ZMQ socket");
     }
 
     if (type == ZMQ_REP || type == ZMQ_PUB) {
       if (zmq_bind(skt, params.endpoint.c_str()) == -1) {
-        SYNCER_LOG_FMTE("failed to bind ZMQ socket");
+        SYNCER_LOG_ERROR("failed to bind ZMQ socket");
       }
     } else {
       if (type == ZMQ_SUB && zmq_setsockopt(skt, ZMQ_SUBSCRIBE,
                                             params.filter.c_str(),
                                             params.filter.size()) == -1) {
-        SYNCER_LOG_FMTE("failed to set ZMQ_SUBSCRIBE for ZMQ socket");
+        SYNCER_LOG_ERROR("failed to set ZMQ_SUBSCRIBE for ZMQ socket");
       }
       if (zmq_connect(skt, params.endpoint.c_str()) == -1) {
-        SYNCER_LOG_FMTE("failed to connect ZMQ socket");
+        SYNCER_LOG_ERROR("failed to connect ZMQ socket");
       }
     }
 
