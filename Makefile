@@ -6,7 +6,7 @@ BLD_DIR := ./build
 BIN_DIR := $(BLD_DIR)/test
 DOC_DIR := $(BLD_DIR)/doc
 
-SRCS := main.cc sanity.cc stress.cc
+SRCS := main.cc sanity.cc stress.cc recover.cc
 OBJS := $(SRCS:%.cc=$(BIN_DIR)/%.o)
 DEPS := $(SRCS:%.cc=$(BIN_DIR)/%.d)
 BIN := $(BIN_DIR)/test
@@ -29,7 +29,7 @@ doc:
 	mkdir -p $(DOC_DIR)
 	doxygen
 
-open-doc:
+open-doc: doc
 	open $(DOC_DIR)/index.html
 
 clean:

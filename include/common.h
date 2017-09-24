@@ -20,7 +20,7 @@
  * @brief Log a message.
  * @details To customize logging this macro should be redefined by user.
  */
-#define SYNCER_LOG(msg) { std::cerr << "syncer: " << std::endl; }
+#define SYNCER_LOG(msg) { std::cerr << "syncer: " << msg << std::endl; }
 
 #endif // SYNCER_LOG
 

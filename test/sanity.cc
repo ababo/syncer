@@ -3,6 +3,8 @@
 #include <regex>
 #include <thread>
 
+#define JSON_NOEXCEPTION
+
 #include "catch.hpp"
 #include "data.h"
 #include "syncer.h"
@@ -16,7 +18,7 @@ using namespace std::chrono;
 TEST_CASE("sanity") {
   Data data;
   data.ints = { 1, 2, 3 };
-  data.items["key"] = { 123, "hello" };
+  data.items["key"] = Item(123, "hello");
   data.baz = 321;
   Server<Data> server("tcp://*:5000", "tcp://*:5001", data);
 
@@ -51,7 +53,7 @@ TEST_CASE("sanity") {
   this_thread::sleep_for(milliseconds(100));
 
   data.ints.pop_back();
-  data.items["key2"] = { 234, "bye" };
+  data.items["key2"] = Item(234, "bye");
   data.baz = 432;
   server.Update(data);
   this_thread::sleep_for(milliseconds(100));

@@ -7,6 +7,7 @@
 #ifndef SYNCER_SERVER_H_
 #define SYNCER_SERVER_H_
 
+#include <chrono>
 #include <mutex>
 
 #include "socket.h"
@@ -47,15 +48,19 @@ template <typename T, typename Socket = DefaultSocket> class Server {
                                    std::ref(*this),
                                    std::placeholders::_1))
       , pub_(pub_params) {
+    using namespace std;
+
     to_json(state_, data);
     state_[VERSION_KEY] = ver_;
 
     {
-      std::lock_guard<std::mutex> _(mtx_);
+      lock_guard<mutex> _(mtx_);
       reply_ = state_.dump();
     }
 
-    // empty message means to request a full state
+    // notify subscribers to request a full state
+    int period = Socket::PUB_SUB_CONNECT_PERIOD;
+    this_thread::sleep_for(chrono::milliseconds(period));
     pub_.Publish(Message());
   }
 

@@ -162,8 +162,18 @@ class ZMQSocket {
     int ssize_ = 0;
   };
 
-  /** @brief Waiting timeout in milliseconds. */
+  /**
+   * @brief Waiting timeout in milliseconds.
+   * @details Part of the socket template API.
+   */
   static const int WAIT_TIMEOUT = 100;
+
+  /**
+   * @brief Publish/subscribe connection period in milliseconds.
+   * @detail This is an empirically obtained maximum of connection time
+   * between publisher and subscribers. Part of the socket template API.
+   */
+  static const int PUB_SUB_CONNECT_PERIOD = 250;
 
   /**
    * @brief Constructor.

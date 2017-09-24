@@ -11,7 +11,11 @@ namespace syncer {
 namespace test {
 
 struct Item {
-  int foo;
+  Item() {}
+  Item(int foo, const std::string& bar)
+      : foo(foo), bar(bar) { }
+
+  int foo = 0;
   std::string bar;
 };
 
@@ -33,7 +37,7 @@ static inline void from_json(const nlohmann::json& j, Item& c) {
 struct Data {
   std::vector<int> ints;
   std::map<std::string, Item> items;
-  int baz;
+  int baz = 0;
 };
 
 static inline void to_json(nlohmann::json& j, const Data& c) {

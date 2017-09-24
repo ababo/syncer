@@ -15,7 +15,6 @@ using namespace std::chrono;
 
 TEST_CASE("stress") {
   Data data;
-  data.baz = 0;
   Server<Data> server("tcp://*:5000", "tcp://*:5001", data);
 
   atomic_int fired(0);
