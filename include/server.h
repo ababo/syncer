@@ -70,7 +70,7 @@ template <typename T, typename Socket = DefaultSocket> class Server {
   /**
    * @brief Constructor.
    * @details Not suited for ZeroMQ backend.
-   * @param params replier and publisher parameters.
+   * @details For broker-based backends (not for ZeroMQ).
    * @param data an initial data state.
    */
   Server(const Params& params, const T& data)

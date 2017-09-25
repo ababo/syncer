@@ -28,18 +28,24 @@ class ZMQSocket {
      * @param conn_str a connection string.
      * @param subj a subscriber's subject.
      */
-    Params(const char* conn_str, const char* subj = nullptr) {
-      endpoint = conn_str;
-      if (subj != nullptr) {
-        filter = subj;
+    Params(const char* conn_str, const char* subject = nullptr) {
+      this->conn_str = conn_str;
+      if (subject != nullptr) {
+        this->subject = subject;
       }
     }
 
-    /** @brief ZeroMQ endpoint. */
-    std::string endpoint;
+    /**
+     * @brief ZeroMQ endpoint.
+     * @details Part of the socket template API.
+     */
+    std::string conn_str;
 
-    /** @brief ZeroMQ subscriber's filter. */
-    std::string filter;
+    /**
+     * @brief ZeroMQ subscriber's filter.
+     * @details Part of the socket template API.
+     */
+    std::string subject;
 
     /** @brief ZeroMQ ZMQ_SNDHWM value. */
     int sndhwm = 0;
@@ -293,16 +299,16 @@ class ZMQSocket {
     }
 
     if (type == ZMQ_REP || type == ZMQ_PUB) {
-      if (zmq_bind(skt, params.endpoint.c_str()) == -1) {
+      if (zmq_bind(skt, params.conn_str.c_str()) == -1) {
         SYNCER_LOG_ERROR("failed to bind ZMQ socket");
       }
     } else {
       if (type == ZMQ_SUB && zmq_setsockopt(skt, ZMQ_SUBSCRIBE,
-                                            params.filter.c_str(),
-                                            params.filter.size()) == -1) {
+                                            params.subject.c_str(),
+                                            params.subject.size()) == -1) {
         SYNCER_LOG_ERROR("failed to set ZMQ_SUBSCRIBE for ZMQ socket");
       }
-      if (zmq_connect(skt, params.endpoint.c_str()) == -1) {
+      if (zmq_connect(skt, params.conn_str.c_str()) == -1) {
         SYNCER_LOG_ERROR("failed to connect ZMQ socket");
       }
     }

@@ -73,7 +73,7 @@ template <typename T, typename Socket = DefaultSocket> class Client {
 
   /**
    * @brief Constructor.
-   * @details Not suited for ZeroMQ backend.
+   * @details For broker-based backends (not for ZeroMQ).
    * @param params requester and subscriber parameters.
    * @param router a patch operation router.
    */
