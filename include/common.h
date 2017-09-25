@@ -14,16 +14,13 @@
 #include <string>
 
 #ifndef SYNCER_LOG
-
-#include <iostream>
-
-/**
- * @brief Log a message.
- * @details To customize logging this macro should be redefined by user.
- */
-#define SYNCER_LOG(msg) { std::cerr << "syncer: " << msg << std::endl; }
-
-#endif // SYNCER_LOG
+  #include <iostream>
+  /**
+   * @brief Log a message.
+   * @details To customize logging this macro should be redefined by user.
+   */
+  #define SYNCER_LOG(msg) { std::cerr << "syncer: " << msg << std::endl; }
+#endif
 
 /** @brief Log a formatted message. */
 #define SYNCER_LOG_FMT(fmt, ...) \
@@ -37,7 +34,6 @@
 #define SYNCER_LOG_EXCEPTION(e, fmt, ...) \
 { SYNCER_LOG(string_format(fmt, ##__VA_ARGS__) + ": " + e.what()); }
 
-/** @brief Wrappers for exception handling constructs. */
 #if not defined (SYNCER_NOEXCEPTION) \
       && (defined (__cpp_exceptions) || defined (__EXCEPTIONS) \
             || defined (_CPPUNWIND))

@@ -59,7 +59,7 @@ template <typename T> class PatchOpRouter {
    * Requirements for value type template parameter:
    *   - Must have a default constructor.
    *   - Must have `from_json` and `to_json` function overloads.
-   *   - Might have a move constructor (can boost performance).
+   *   - May have a move constructor (can boost performance).
    */
   template <typename T2> void AddCallback(const std::string& path_re,
                                           PatchOpSet ops,

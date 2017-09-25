@@ -27,7 +27,7 @@ namespace syncer {
  * Requirements for data type template parameter:
  *   - Must have a default constructor.
  *   - Must have `from_json` and `to_json` function overloads.
- *   - Might have a move constructor (can boost performance).
+ *   - May have a move constructor (can boost performance).
  */
 template <typename T, typename Socket = DefaultSocket> class Server {
  public:
@@ -66,6 +66,15 @@ template <typename T, typename Socket = DefaultSocket> class Server {
     }
     SYNCER_CATCH_LOG("failed to construct server")
   }
+
+  /**
+   * @brief Constructor.
+   * @details Not suited for ZeroMQ backend.
+   * @param params replier and publisher parameters.
+   * @param data an initial data state.
+   */
+  Server(const Params& params, const T& data)
+      : Server(params, params, data) { }
 
   /**
    * @brief Update data state.
