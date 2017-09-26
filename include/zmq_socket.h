@@ -232,6 +232,7 @@ class ZMQSocket {
     int num = zmq_recv(skt_, &msg.data_[0], Message::MAX_SIZE, 0);
     if (num != -1) {
       msg.data_.resize(num);
+      msg.ssize_ = strlen(msg.data_.c_str());
     } else {
       SYNCER_LOG_ERROR("failed to receive from ZMQ socket");
     }
