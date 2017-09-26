@@ -55,6 +55,9 @@ class ZMQSocket {
 
     /** @brief Size of ZeroMQ thread pool. */
     int io_threads = 1;
+
+    /** @brief ZeroMQ linger period in milliseconds. */
+    int linger = 0;
   };
 
   /**
@@ -296,6 +299,11 @@ class ZMQSocket {
     val = params.rcvhwm;
     if (zmq_setsockopt(skt, ZMQ_RCVHWM, &val, sizeof(val)) == -1) {
       SYNCER_LOG_ERROR("failed to set ZMQ_RCVHWM for ZMQ socket");
+    }
+
+    val = params.linger;
+    if (zmq_setsockopt(skt, ZMQ_LINGER, &val, sizeof(val)) == -1) {
+      SYNCER_LOG_ERROR("failed to set ZMQ_LINGER for ZMQ socket");
     }
 
     if (type == ZMQ_REP || type == ZMQ_PUB) {

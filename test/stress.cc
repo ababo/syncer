@@ -13,6 +13,12 @@ namespace test {
 using namespace std;
 using namespace std::chrono;
 
+/*
+ * 1. Create a server.
+ * 2. Create 10 clients, each one in a dedicated thread.
+ * 3. Update the server's data state.
+ * 4. Make sure all the clients have received that update.
+ */
 TEST_CASE("stress") {
   Data data;
   Server<Data> server("tcp://*:5000", "tcp://*:5001", data);
@@ -40,7 +46,7 @@ TEST_CASE("stress") {
     server.Update(data);
   }
 
-  for (thread& thr : threads) {
+  for (auto& thr : threads) {
     thr.join();
   }
 

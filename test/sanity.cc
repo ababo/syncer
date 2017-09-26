@@ -13,6 +13,13 @@ namespace test {
 using namespace std;
 using namespace std::chrono;
 
+/*
+ * 1. Create a server.
+ * 2. Create a client with different types of callbacks.
+ * 3. Update the server's data state.
+ * 4. Make sure the corresponding callbacks are triggered.
+ * 5. Make sure the client's data state matches the server's one.
+ */
 TEST_CASE("sanity") {
   Data data;
   data.ints = { 1, 2, 3 };
