@@ -26,7 +26,7 @@ class ZMQSocket {
      * @brief Constructor.
      * @details Part of the socket template API.
      * @param conn_str a connection string.
-     * @param subj a subscriber's subject.
+     * @param subject a subscriber's subject.
      */
     Params(const char* conn_str, const char* subject = nullptr) {
       this->conn_str = conn_str;

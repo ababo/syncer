@@ -14,6 +14,7 @@
 #include "json.hpp"
 #include "publisher.h"
 #include "replier.h"
+#include "timer.h"
 
 namespace syncer {
 
@@ -60,17 +61,17 @@ template <typename T, typename Socket = DefaultSocket> class Server {
       }
 
       // notify subscribers to request a full state
-      int period = Socket::PUB_SUB_CONNECT_PERIOD;
-      this_thread::sleep_for(chrono::milliseconds(period));
-      pub_.Publish(Message());
+      timer_.Set([this] {
+        pub_.Publish(Message());
+      }, Socket::PUB_SUB_CONNECT_PERIOD);
     }
     SYNCER_CATCH_LOG("failed to construct server")
   }
 
   /**
    * @brief Constructor.
-   * @details Not suited for ZeroMQ backend.
    * @details For broker-based backends (not for ZeroMQ).
+   * @param params replier and publisher parameters.
    * @param data an initial data state.
    */
   Server(const Params& params, const T& data)
@@ -110,12 +111,14 @@ template <typename T, typename Socket = DefaultSocket> class Server {
     return reply_;
   }
 
+  // the field order is important!
   nlohmann::json state_;
   int ver_ = 0;
   Message reply_;
   std::mutex mtx_;
   Publisher<Socket> pub_;
-  Replier<Socket> rep_; // to be destructed before other fields
+  Replier<Socket> rep_;
+  Timer timer_;
 };
 
 }

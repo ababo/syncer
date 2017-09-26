@@ -44,7 +44,8 @@ TEST_CASE("recover") {
   Data data;
   data.baz = 2;
   Server<Data> server("tcp://*:5000", "tcp://*:5001", data);
-  this_thread::sleep_for(milliseconds(100));
+  int period = DefaultSocket::PUB_SUB_CONNECT_PERIOD + 100;
+  this_thread::sleep_for(milliseconds(period));
 
   for (const auto& client : clients) {
     REQUIRE(client.data().baz == 2);

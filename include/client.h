@@ -177,10 +177,11 @@ template <typename T, typename Socket = DefaultSocket> class Client {
     SYNCER_CATCH_LOG("failed to handle data diff")
   }
 
+  // the field order is important!
   PatchOpRouter<T> router_;
   nlohmann::json state_;
   std::mutex mtx_;
-  Requester<Socket> req_; // to be destructed after sub_, but before others 
+  Requester<Socket> req_;
   Subscriber<Socket> sub_;
 };
 
