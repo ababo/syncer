@@ -55,7 +55,9 @@ static inline void from_json(const json& j, State& s) {
   s.forecast = j.at("forecast").get<string>();
 }
 
-void AddEventHandlers(PatchOpRouter<State>& router) {
+PatchOpRouter<State> CreateRouter() {
+  PatchOpRouter<State> router;
+
   router.AddCallback<int>(R"(/sites/(\w+)/temperature)", PATCH_OP_ANY,
     [] (const State& old, const smatch& m, PatchOp op, int t) {
       cout << "Temperature in " << m[1].str() << " has changed: "
@@ -63,16 +65,18 @@ void AddEventHandlers(PatchOpRouter<State>& router) {
     });
 
   router.AddCallback<Site>(R"(/sites/(\w+)$)", PATCH_OP_ADD,
-    [&] (const State&, const smatch& m, PatchOp op, const Site& s) {
+    [] (const State&, const smatch& m, PatchOp op, const Site& s) {
       cout << "Site added: " << m[1].str()
            << " (temperature: " << s.temperature
            << ", pressure: " << s.pressure << ")" << endl;
     });
 
   router.AddCallback<Site>(R"(/sites/(\w+)$)", PATCH_OP_REMOVE,
-    [&] (const State&, const smatch& m, PatchOp op, const Site&) {
+    [] (const State&, const smatch& m, PatchOp op, const Site&) {
       cout << "Site removed: " << m[1].str() << endl;
     });
+
+  return router;
 }
 
 int main() {
@@ -82,9 +86,9 @@ int main() {
   state.forecast = "cloudy and rainy";
   Server<State> server("tcp://*:5000", "tcp://*:5001", state);
 
-  PatchOpRouter<State> router;
-  AddEventHandlers(router);
-  Client<State> client("tcp://localhost:5000", "tcp://localhost:5001", router);
+  Client<State> client("tcp://localhost:5000",
+                       "tcp://localhost:5001",
+                       CreateRouter());
 
   this_thread::sleep_for(milliseconds(100));
 
@@ -137,4 +141,4 @@ Actually Syncer depends on the following libraries:
 2. [JSON](https://github.com/nlohmann/json) (already included).
 3. [Catch](https://github.com/philsquared/Catch) (already included).
 
-As was said, Syncer doesn't need to be built separately. But you can build a Doxygen documentation by `make open-doc` or run unit-tests by `make run-test`.
+As was said, Syncer doesn't need to be built separately. But you can inspect a Doxygen documentation by `make open-doc` or run unit-tests by `make run-test`.

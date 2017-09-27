@@ -29,7 +29,7 @@ TEST_CASE("pubsub") {
   auto params = Params("tcp://localhost:5000", "subj1");
   Subscriber<> sub1(params, [&] (const Message& msg) {
     cout << msg.body() << endl;
-    rec1 = string(msg.body()) == "hello";
+    rec1 = string(msg.subject()) == "subj1" && string(msg.body()) == "hello";
   });
 
   atomic_bool rec2(false);
