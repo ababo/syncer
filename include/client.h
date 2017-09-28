@@ -53,14 +53,14 @@ template <typename T, typename Socket = DefaultSocket> class Client {
   Client(const Params& req_params,
          const Params& sub_params,
          const PatchOpRouter<T>& router)
-      : req_(req_params, std::bind(&Client::HandleReply,
+      : router_(router)
+      , req_(req_params, std::bind(&Client::HandleReply,
                                    std::ref(*this),
                                    std::placeholders::_1,
                                    std::placeholders::_2))
       , sub_(sub_params, std::bind(&Client::HandleNotification,
                                    std::ref(*this),
-                                   std::placeholders::_1))
-      , router_(router) {
+                                   std::placeholders::_1)) {
     SYNCER_TRY {
       T data;
       nlohmann::to_json(state_, data);

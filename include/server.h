@@ -45,10 +45,10 @@ template <typename T, typename Socket = DefaultSocket> class Server {
    * @param data an initial data state.
    */
   Server(const Params& rep_params, const Params& pub_params, const T& data)
-      : rep_(rep_params, std::bind(&Server::HandleRequest,
+      : pub_(pub_params)
+      , rep_(rep_params, std::bind(&Server::HandleRequest,
                                    std::ref(*this),
-                                   std::placeholders::_1))
-      , pub_(pub_params) {
+                                   std::placeholders::_1)) {
     SYNCER_TRY {
       using namespace std;
 
@@ -76,6 +76,22 @@ template <typename T, typename Socket = DefaultSocket> class Server {
    */
   Server(const Params& params, const T& data)
       : Server(params, params, data) { }
+
+  /**
+   * @brief Data accessor.
+   * @return a current data state.
+   */
+  T data() const {
+    using namespace std;
+
+    T data;
+    SYNCER_TRY {
+      nlohmann::from_json(state_, data);
+    }
+    SYNCER_CATCH_LOG("failed to construct data")
+
+    return move(data);
+  }
 
   /**
    * @brief Update data state.
