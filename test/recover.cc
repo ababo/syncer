@@ -25,7 +25,7 @@ TEST_CASE("recover") {
     Data data;
     data.baz = 1;
     Server<Data> server("tcp://*:5000", "tcp://*:5001", data);
-    this_thread::sleep_for(milliseconds(100));
+    this_thread::sleep_for(milliseconds(200));
   });
 
   PatchOpRouter<Data> router;
