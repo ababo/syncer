@@ -62,6 +62,7 @@ template <typename Socket = DefaultSocket> class Subscriber {
     }
   }
 
+  // the field order is important!
   std::atomic_bool exit_;
   std::thread thr_;
 };

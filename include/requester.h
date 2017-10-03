@@ -115,12 +115,13 @@ template <typename Socket = DefaultSocket> class Requester {
     }
   }
 
+  // the field order is important!
   std::atomic_bool exit_;
-  std::thread thr_;
   int timeout_;
   Message req_;
   std::mutex mtx_;
   std::condition_variable cv_;
+  std::thread thr_;
 };
 
 }

@@ -63,6 +63,7 @@ template <typename Socket = DefaultSocket> class Replier {
     }
   }
 
+  // the field order is important!
   std::atomic_bool exit_;
   std::thread thr_;
 };

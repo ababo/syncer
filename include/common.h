@@ -8,6 +8,7 @@
 #define SYNCER_COMMON_H_
 
 #include <cstdio>
+#include <cstring>
 #include <exception>
 #include <iostream>
 #include <memory>

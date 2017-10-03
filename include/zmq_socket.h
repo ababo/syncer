@@ -47,17 +47,23 @@ class ZMQSocket {
      */
     std::string subject;
 
-    /** @brief ZeroMQ ZMQ_SNDHWM value. */
+    /** @brief ZMQ_SNDHWM option value. */
     int sndhwm = 0;
 
-    /** @brief ZeroMQ ZMQ_RCVHWM value. */
+    /** @brief ZMQ_RCVHWM option value. */
     int rcvhwm = 0;
 
-    /** @brief Size of ZeroMQ thread pool. */
+    /** @brief ZMQ_IO_THREADS option value. */
     int io_threads = 1;
 
-    /** @brief ZeroMQ linger period in milliseconds. */
+    /** @brief ZMQ_LINGER option value. */
     int linger = 0;
+
+    /** @brief ZMQ_REQ_CORRELATE option value. */
+    bool req_correlate = true;
+
+    /** @brief ZMQ_REQ_RELAXED option value. */
+    bool req_relaxed = true;
   };
 
   /**
@@ -285,6 +291,12 @@ class ZMQSocket {
     return ctx;
   }
 
+  static void SetSocketOption(void* skt, int opt, int val, const char* name) {
+    if (zmq_setsockopt(skt, opt, &val, sizeof(val)) == -1) {
+      SYNCER_LOG_ERROR("failed to set %s for ZMQ socket", name);
+    }
+  }
+
   static void* CreateSocket(void* ctx, int type, const Params& params) {
     void* skt = zmq_socket(ctx, type);
     if (skt == nullptr) {
@@ -292,19 +304,15 @@ class ZMQSocket {
       return nullptr;
     }
 
-    int val = params.sndhwm;
-    if (zmq_setsockopt(skt, ZMQ_SNDHWM, &val, sizeof(val)) == -1) {
-      SYNCER_LOG_ERROR("failed to set ZMQ_SNDHWM for ZMQ socket");
-    }
+    SetSocketOption(skt, ZMQ_SNDHWM, params.sndhwm, "ZMQ_SNDHWM");
+    SetSocketOption(skt, ZMQ_RCVHWM, params.rcvhwm, "ZMQ_RCVHWM");
+    SetSocketOption(skt, ZMQ_LINGER, params.linger, "ZMQ_LINGER");
 
-    val = params.rcvhwm;
-    if (zmq_setsockopt(skt, ZMQ_RCVHWM, &val, sizeof(val)) == -1) {
-      SYNCER_LOG_ERROR("failed to set ZMQ_RCVHWM for ZMQ socket");
-    }
-
-    val = params.linger;
-    if (zmq_setsockopt(skt, ZMQ_LINGER, &val, sizeof(val)) == -1) {
-      SYNCER_LOG_ERROR("failed to set ZMQ_LINGER for ZMQ socket");
+    if (type == ZMQ_REQ) {
+      SetSocketOption(skt, ZMQ_REQ_CORRELATE, params.req_correlate,
+                      "ZMQ_REQ_CORRELATE");
+      SetSocketOption(skt, ZMQ_REQ_RELAXED, params.req_relaxed,
+                      "ZMQ_REQ_RELAXED");
     }
 
     if (type == ZMQ_REP || type == ZMQ_PUB) {
